@@ -136,8 +136,6 @@ public class TicketContract : SmartContract
         return selectedSeat.Address == address;
     }
 
-    public Seat[] GetSeats() => Seats;
-
     private bool Refund(ulong amount)
     {
         Assert(amount <= Message.Value, "Invalid refund value");
