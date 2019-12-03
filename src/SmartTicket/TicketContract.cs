@@ -93,7 +93,19 @@ public class TicketContract : SmartContract
     {
         Assert(EndOfSale != 0 && Block.Number < EndOfSale, "Sale not in progress");
 
-        var selectedSeat = SelectSeat(seatIdentifierBytes);
+        var seatIdentifier = Serializer.ToStruct<Seat>(seatIdentifierBytes);
+        var copyOfSeats = Seats;
+        Seat selectedSeat = default(Seat);
+        int selectedSeatIndex = 0;
+        for (var i = 0; i < copyOfSeats.Length; i++)
+        {
+            if (copyOfSeats[i].Number == seatIdentifier.Number && copyOfSeats[i].Letter == seatIdentifier.Letter)
+            {
+                selectedSeatIndex = i;
+                selectedSeat = copyOfSeats[i];
+                break;
+            }
+        }
 
         // seat not found
         if (IsDefaultSeat(selectedSeat))
@@ -121,7 +133,8 @@ public class TicketContract : SmartContract
             Refund(Message.Value - selectedSeat.Price);
         }
 
-        selectedSeat.Address = Message.Sender;
+        copyOfSeats[selectedSeatIndex].Address = Message.Sender;
+        Seats = copyOfSeats;
         return true;
     }
 

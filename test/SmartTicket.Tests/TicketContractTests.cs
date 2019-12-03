@@ -688,6 +688,40 @@ namespace SmartTicket.Tests
         }
 
         [Test]
+        public void OnReserve_CanReserve_SeatsAreSet()
+        {
+            // Arrange
+            var address = new Address(8, 2, 3, 3, 9);
+            var amount = (ulong)1000;
+
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+            var copyOfSeats = Seats;
+            var pricedSeats = PricedSeats;
+            var querySeat = copyOfSeats.First();
+            var targetSeat = pricedSeats.First(seat => seat.Number == querySeat.Number && seat.Letter == querySeat.Letter);
+            var targetIndex = Array.IndexOf(pricedSeats, targetSeat);
+            targetSeat.Price = amount;
+            pricedSeats[targetIndex] = targetSeat;
+
+            var seats = _serializer.Serialize(copyOfSeats);
+            var ticketContract = new TicketContract(_smartContractState.Object, seats);
+
+            _message.Setup(callTo => callTo.Sender).Returns(address);
+            _message.Setup(callTo => callTo.Value).Returns(amount);
+            _block.Setup(callTo => callTo.Number).Returns(50);
+            _persistentState.Setup(callTo => callTo.GetArray<Seat>(nameof(TicketContract.Seats))).Returns(pricedSeats);
+            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+
+            _persistentState.Invocations.Clear();
+
+            // Act
+            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
+
+            // Assert
+            _persistentState.Verify(callTo => callTo.SetArray(nameof(Seats), It.IsAny<Array>()), Times.Once);
+        }
+
+        [Test]
         public void OnOwnsSeat_EmptyAddress_ThrowsAssertException()
         {
             // Arrange
