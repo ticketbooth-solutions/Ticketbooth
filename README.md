@@ -4,6 +4,6 @@
 
 ## Overview
 
-A smart contract for event ticketing, built on Stratis Platform. Enables the selling of tickets with flexible pricing per event. Hoping to additionally implement the setup of a refund policy, where ticket holders can release tickets back to the contract, for a fixed fee.
+A smart contract for event ticketing, built on Stratis Platform. Enables the selling of tickets with flexible pricing per event. Includes a refund policy, where ticket holders can release tickets back to the contract, for a fixed fee.
 
 This could be integrated with a fiat to crypto payment gateway and managed by a ticket sales platform, or the venue itself.
