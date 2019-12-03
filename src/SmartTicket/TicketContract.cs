@@ -2,12 +2,10 @@
 
 public class TicketContract : SmartContract
 {
-    private Address Owner
+    public TicketContract(ISmartContractState smartContractState, byte[] ticketsBytes) : base(smartContractState)
     {
-        get
-        {
-            return PersistentState.GetAddress(nameof(Owner));
-        }
+        PersistentState.SetAddress(nameof(Owner), Message.Sender);
+        Tickets = ResetTickets(Serializer.ToArray<Ticket>(ticketsBytes));
     }
 
     public Ticket[] Tickets
@@ -34,10 +32,28 @@ public class TicketContract : SmartContract
         }
     }
 
-    public TicketContract(ISmartContractState smartContractState, byte[] ticketsBytes) : base(smartContractState)
+    public ulong ReleaseFee
     {
-        PersistentState.SetAddress(nameof(Owner), Message.Sender);
-        Tickets = ResetTickets(Serializer.ToArray<Ticket>(ticketsBytes));
+        get
+        {
+            return PersistentState.GetUInt64(nameof(ReleaseFee));
+        }
+        private set
+        {
+            Assert(Message.Sender == Owner, "Only contract owner can set release fee");
+            Assert(!SaleOpen, "Sale is open");
+            PersistentState.SetUInt64(nameof(ReleaseFee), value);
+        }
+    }
+
+    private bool SaleOpen => EndOfSale != 0 && Block.Number < EndOfSale;
+
+    private Address Owner
+    {
+        get
+        {
+            return PersistentState.GetAddress(nameof(Owner));
+        }
     }
 
     public void BeginSale(byte[] ticketsBytes, ulong endOfSale)
@@ -55,7 +71,7 @@ public class TicketContract : SmartContract
             Ticket ticket = default(Ticket);
             for (int y = 0; y < tickets.Length; y++)
             {
-                if (copyOfTickets[i].Seat.Number == tickets[y].Seat.Number && copyOfTickets[i].Seat.Letter == tickets[y].Seat.Letter)
+                if (SeatsAreEqual(copyOfTickets[i].Seat, tickets[y].Seat))
                 {
                     ticket = tickets[y];
                     break;
@@ -81,7 +97,7 @@ public class TicketContract : SmartContract
 
     public bool CheckAvailability(byte[] seatIdentifierBytes)
     {
-        Assert(EndOfSale != 0 && Block.Number < EndOfSale, "Sale not in progress");
+        Assert(SaleOpen, "Sale not open");
 
         var ticket = SelectTicket(seatIdentifierBytes);
 
@@ -92,7 +108,11 @@ public class TicketContract : SmartContract
 
     public bool Reserve(byte[] seatIdentifierBytes)
     {
-        Assert(EndOfSale != 0 && Block.Number < EndOfSale, "Sale not in progress");
+        if (!SaleOpen)
+        {
+            Refund(Message.Value);
+            Assert(false, "Sale not open");
+        }
 
         var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
         var copyOfTickets = Tickets;
@@ -100,7 +120,7 @@ public class TicketContract : SmartContract
         int ticketIndex = 0;
         for (var i = 0; i < copyOfTickets.Length; i++)
         {
-            if (copyOfTickets[i].Seat.Number == seat.Number && copyOfTickets[i].Seat.Letter == seat.Letter)
+            if (SeatsAreEqual(copyOfTickets[i].Seat, seat))
             {
                 ticketIndex = i;
                 ticket = copyOfTickets[i];
@@ -150,12 +170,51 @@ public class TicketContract : SmartContract
         return ticket.Address == address;
     }
 
+    public void SetReleaseFee(ulong releaseFee)
+    {
+        ReleaseFee = releaseFee;
+    }
+
+    public void ReleaseTicket(byte[] seatIdentifierBytes)
+    {
+        Assert(SaleOpen, "Sale not open");
+
+        var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
+        var copyOfTickets = Tickets;
+        Ticket ticket = default(Ticket);
+        int ticketIndex = 0;
+        for (var i = 0; i < copyOfTickets.Length; i++)
+        {
+            if (SeatsAreEqual(copyOfTickets[i].Seat, seat))
+            {
+                ticketIndex = i;
+                ticket = copyOfTickets[i];
+                break;
+            }
+        }
+
+        Assert(!IsDefaultSeat(ticket.Seat), "Seat not found");
+        Assert(Message.Sender == ticket.Address, "You do not own this ticket");
+
+        if (ticket.Price > ReleaseFee)
+        {
+            TryTransfer(Message.Sender, ticket.Price - ReleaseFee);
+        }
+        copyOfTickets[ticketIndex].Address = Address.Zero;
+        Tickets = copyOfTickets;
+    }
+
     private bool Refund(ulong amount)
     {
         Assert(amount <= Message.Value, "Invalid refund value");
+        return TryTransfer(Message.Sender, amount);
+    }
+
+    private bool TryTransfer(Address recipient, ulong amount)
+    {
         if (amount > 0)
         {
-            var transferResult = Transfer(Message.Sender, amount);
+            var transferResult = Transfer(recipient, amount);
             return transferResult.Success;
         }
 
@@ -167,7 +226,7 @@ public class TicketContract : SmartContract
         var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
         foreach (var ticket in Tickets)
         {
-            if (ticket.Seat.Number == seat.Number && ticket.Seat.Letter == seat.Letter)
+            if (SeatsAreEqual(ticket.Seat, seat))
             {
                 return ticket;
             }
@@ -184,6 +243,11 @@ public class TicketContract : SmartContract
     private bool IsDefaultSeat(Seat seat)
     {
         return seat.Number == default(int) || seat.Letter == default(char);
+    }
+
+    private bool SeatsAreEqual(Seat seat1, Seat seat2)
+    {
+        return seat1.Number == seat2.Number && seat1.Letter == seat2.Letter;
     }
 
     private Ticket[] ResetTickets(Ticket[] seats)
