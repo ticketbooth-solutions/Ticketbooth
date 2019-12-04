@@ -2,8 +2,9 @@
 
 public class TicketContract : SmartContract
 {
-    public TicketContract(ISmartContractState smartContractState, byte[] ticketsBytes) : base(smartContractState)
+    public TicketContract(ISmartContractState smartContractState, byte[] ticketsBytes, byte[] venueBytes) : base(smartContractState)
     {
+        Log(Serializer.ToStruct<Venue>(venueBytes));
         PersistentState.SetAddress(nameof(Owner), Message.Sender);
         Tickets = ResetTickets(Serializer.ToArray<Ticket>(ticketsBytes));
     }
@@ -46,7 +47,14 @@ public class TicketContract : SmartContract
         }
     }
 
-    private bool SaleOpen => EndOfSale != 0 && Block.Number < EndOfSale;
+    private bool SaleOpen
+    {
+        get
+        {
+            var endOfSale = EndOfSale;
+            return endOfSale != 0 && Block.Number < endOfSale;
+        }
+    }
 
     private Address Owner
     {
@@ -56,11 +64,12 @@ public class TicketContract : SmartContract
         }
     }
 
-    public void BeginSale(byte[] ticketsBytes, ulong endOfSale)
+    public void BeginSale(byte[] ticketsBytes, byte[] showBytes)
     {
+        var show = Serializer.ToStruct<Show>(showBytes);
         Assert(Message.Sender == Owner, "Only contract owner can begin a sale");
         Assert(EndOfSale == default(ulong), "Sale currently in progress");
-        Assert(Block.Number < endOfSale, "Sale must finish in the future");
+        Assert(Block.Number < show.EndOfSale, "Sale must finish in the future");
 
         var tickets = Serializer.ToArray<Ticket>(ticketsBytes);
         var copyOfTickets = Tickets;
@@ -82,7 +91,8 @@ public class TicketContract : SmartContract
         }
 
         Tickets = copyOfTickets;
-        EndOfSale = endOfSale;
+        EndOfSale = show.EndOfSale;
+        Log(show);
     }
 
     public void EndSale()
@@ -275,5 +285,21 @@ public class TicketContract : SmartContract
         public ulong Price;
 
         public Address Address;
+    }
+
+    public struct Venue
+    {
+        public string Name;
+    }
+
+    public struct Show
+    {
+        public string Name;
+
+        public string Organiser;
+
+        public ulong Time;
+
+        public ulong EndOfSale;
     }
 }

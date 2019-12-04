@@ -13,6 +13,7 @@ namespace SmartTicket.Tests
     {
         private Mock<Network> _network;
         private ISerializer _serializer;
+        private Mock<IContractLogger> _contractLogger;
         private Mock<ITransferResult> _transferResult;
         private Mock<IInternalTransactionExecutor> _internalTransactionExecuter;
         private Mock<IBlock> _block;
@@ -32,6 +33,10 @@ namespace SmartTicket.Tests
 
         private static readonly Seat _invalidSeat = new Seat { Number = 101, Letter = 'A' };
 
+        private static readonly Venue _venue = new Venue { Name = "M&S Bank Arena" };
+
+        private static readonly Show _performance = new Show { Organiser = "Rick Astley", Name = "Greatest Hits Tour 2020", Time = 1586539800 };
+
         private static Ticket[] Tickets => new Ticket[]
             {
                 new Ticket { Seat = _seats[0], Price = 50 }, new Ticket { Seat = _seats[1], Price = 24 }, new Ticket { Seat = _seats[2], Price = 50 },
@@ -47,6 +52,7 @@ namespace SmartTicket.Tests
             _ownerAddress = new Address(5, 5, 4, 3, 5);
             _network = new Mock<Network>();
             _serializer = new Serializer(new ContractPrimitiveSerializer(_network.Object));
+            _contractLogger = new Mock<IContractLogger>();
             _transferResult = new Mock<ITransferResult>();
             _internalTransactionExecuter = new Mock<IInternalTransactionExecutor>();
             _internalTransactionExecuter
@@ -57,10 +63,26 @@ namespace SmartTicket.Tests
             _persistentState = new Mock<IPersistentState>();
             _smartContractState = new Mock<ISmartContractState>();
             _smartContractState.SetupGet(callTo => callTo.Serializer).Returns(_serializer);
+            _smartContractState.SetupGet(callTo => callTo.ContractLogger).Returns(_contractLogger.Object);
             _smartContractState.SetupGet(callTo => callTo.InternalTransactionExecutor).Returns(_internalTransactionExecuter.Object);
             _smartContractState.SetupGet(callTo => callTo.Block).Returns(_block.Object);
             _smartContractState.SetupGet(callTo => callTo.Message).Returns(_message.Object);
             _smartContractState.SetupGet(callTo => callTo.PersistentState).Returns(_persistentState.Object);
+        }
+
+        [Test]
+        public void OnConstructed_Logs_Venue()
+        {
+            // Arrange
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var tickets = _serializer.Serialize(Tickets);
+
+            // Act
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
+
+            // Assert
+            _contractLogger.Verify(callTo => callTo.Log(_smartContractState.Object, _venue), Times.Once);
         }
 
         [Test]
@@ -72,7 +94,7 @@ namespace SmartTicket.Tests
             var tickets = _serializer.Serialize(Tickets);
 
             // Act
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetAddress("Owner", _ownerAddress), Times.Once);
@@ -87,11 +109,35 @@ namespace SmartTicket.Tests
             var tickets = _serializer.Serialize(Tickets);
 
             // Act
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
                 It.Is<Ticket[]>(tickets => tickets.SequenceEqual(_seats.Select(seat => new Ticket { Seat = seat, Price = 0, Address = Address.Zero })))));
+        }
+
+        [Test]
+        public void OnBeginSale_Logs_Performance()
+        {
+            // Arrange
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var copyOfTickets = Tickets;
+            var tickets = _serializer.Serialize(copyOfTickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
+
+            _block.Setup(callTo => callTo.Number).Returns(1);
+            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
+            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
+            var performance = _performance;
+            performance.EndOfSale = 55;
+
+            // Act
+            ticketContract.BeginSale(tickets, _serializer.Serialize(performance));
+
+            // Assert
+            _contractLogger.Verify(callTo => callTo.Log(_smartContractState.Object, performance), Times.Once);
         }
 
         [Test]
@@ -102,15 +148,18 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
+            _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(new Address(3, 2, 5, 4, 2));
+            var performance = _performance;
+            performance.EndOfSale = 55;
 
             // Act
-            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, 55));
+            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, _serializer.Serialize(performance)));
 
             // Assert
             Assert.That(beginSaleCall, Throws.Exception.TypeOf<SmartContractAssertException>());
@@ -124,15 +173,18 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
+            _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+            var performance = _performance;
+            performance.EndOfSale = 55;
 
             // Act
-            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, 55));
+            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, _serializer.Serialize(performance)));
 
             // Assert
             Assert.That(beginSaleCall, Throws.Exception.TypeOf<SmartContractAssertException>());
@@ -148,15 +200,17 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(55);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
+            var performance = _performance;
+            performance.EndOfSale = endOfSale;
 
             // Act
-            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, endOfSale));
+            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, _serializer.Serialize(performance)));
 
             // Assert
             Assert.That(beginSaleCall, Throws.Exception.TypeOf<SmartContractAssertException>());
@@ -170,18 +224,20 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
+            var performance = _performance;
+            performance.EndOfSale = 55;
 
             var ticketsParameter = (Ticket[])copyOfTickets.Clone();
             ticketsParameter[0] = new Ticket { Seat = _invalidSeat };
 
             // Act
-            var beginSaleCall = new Action(() => ticketContract.BeginSale(_serializer.Serialize(ticketsParameter), 55));
+            var beginSaleCall = new Action(() => ticketContract.BeginSale(_serializer.Serialize(ticketsParameter), _serializer.Serialize(performance)));
 
             // Assert
             Assert.That(beginSaleCall, Throws.Exception.TypeOf<SmartContractAssertException>());
@@ -195,15 +251,17 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
+            var performance = _performance;
+            performance.EndOfSale = 55;
 
             // Act
-            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, 55));
+            var beginSaleCall = new Action(() => ticketContract.BeginSale(tickets, _serializer.Serialize(performance)));
 
             // Assert
             Assert.That(beginSaleCall, Throws.Nothing);
@@ -217,15 +275,17 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
+            var performance = _performance;
+            performance.EndOfSale = 55;
 
             // Act
-            ticketContract.BeginSale(tickets, 55);
+            ticketContract.BeginSale(tickets, _serializer.Serialize(performance));
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
@@ -240,15 +300,17 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
+            var performance = _performance;
+            performance.EndOfSale = 55;
 
             // Act
-            ticketContract.BeginSale(tickets, 55);
+            ticketContract.BeginSale(tickets, _serializer.Serialize(performance));
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.EndOfSale), 55));
@@ -262,7 +324,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
@@ -285,7 +347,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
@@ -308,7 +370,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(99);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
@@ -331,7 +393,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
@@ -354,7 +416,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
@@ -378,7 +440,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(copyOfTickets);
@@ -401,7 +463,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
 
@@ -425,7 +487,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
 
@@ -448,7 +510,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _invalidSeat;
 
@@ -471,7 +533,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             copyOfTickets[0].Address = new Address(4, 2, 2, 4, 5);
@@ -495,7 +557,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             copyOfTickets[0].Address = Address.Zero;
@@ -521,7 +583,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
 
@@ -550,7 +612,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
 
@@ -578,7 +640,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _invalidSeat;
 
@@ -606,7 +668,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -638,7 +700,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -671,7 +733,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -703,7 +765,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -735,7 +797,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -767,7 +829,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
 
@@ -788,7 +850,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _invalidSeat;
 
@@ -809,7 +871,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
 
@@ -831,7 +893,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -857,7 +919,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -883,7 +945,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -908,7 +970,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
             _block.Setup(callTo => callTo.Number).Returns(50);
@@ -931,7 +993,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
             _block.Setup(callTo => callTo.Number).Returns(50);
@@ -953,7 +1015,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(20);
             _block.Setup(callTo => callTo.Number).Returns(50);
@@ -976,7 +1038,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             for (var i = 0; i < copyOfTickets.Length; i++)
@@ -1005,7 +1067,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _invalidSeat;
             for (var i = 0; i < copyOfTickets.Length; i++)
@@ -1034,7 +1096,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -1063,7 +1125,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -1095,7 +1157,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -1129,7 +1191,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
@@ -1160,7 +1222,7 @@ namespace SmartTicket.Tests
 
             var copyOfTickets = Tickets;
             var tickets = _serializer.Serialize(copyOfTickets);
-            var ticketContract = new TicketContract(_smartContractState.Object, tickets);
+            var ticketContract = new TicketContract(_smartContractState.Object, tickets, _serializer.Serialize(_venue));
 
             var querySeat = _seats.First();
             var targetTicket = copyOfTickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
