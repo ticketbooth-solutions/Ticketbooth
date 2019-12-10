@@ -2,6 +2,12 @@
 
 public class TicketContract : SmartContract
 {
+    /// <summary>
+    /// Creates a new ticketing contract
+    /// </summary>
+    /// <param name="smartContractState"></param>
+    /// <param name="ticketsBytes">The serialized array of tickets</param>
+    /// <param name="venueBytes">Serialized metadata for the venue</param>
     public TicketContract(ISmartContractState smartContractState, byte[] ticketsBytes, byte[] venueBytes) : base(smartContractState)
     {
         Log(Serializer.ToStruct<Venue>(venueBytes));
@@ -9,6 +15,9 @@ public class TicketContract : SmartContract
         Tickets = ResetTickets(Serializer.ToArray<Ticket>(ticketsBytes));
     }
 
+    /// <summary>
+    /// Stores ticket data for the contract
+    /// </summary>
     public Ticket[] Tickets
     {
         get
@@ -21,6 +30,9 @@ public class TicketContract : SmartContract
         }
     }
 
+    /// <summary>
+    /// The block at which the sale ends
+    /// </summary>
     public ulong EndOfSale
     {
         get
@@ -33,6 +45,9 @@ public class TicketContract : SmartContract
         }
     }
 
+    /// <summary>
+    /// The cost of refunding a ticket after purchase
+    /// </summary>
     public ulong ReleaseFee
     {
         get
@@ -44,6 +59,23 @@ public class TicketContract : SmartContract
             Assert(Message.Sender == Owner, "Only contract owner can set release fee");
             Assert(!SaleOpen, "Sale is open");
             PersistentState.SetUInt64(nameof(ReleaseFee), value);
+        }
+    }
+
+    /// <summary>
+    /// The number of blocks before the end of the sale where refunds are not issued
+    /// </summary>
+    public ulong NoRefundBlocks
+    {
+        get
+        {
+            return PersistentState.GetUInt64(nameof(NoRefundBlocks));
+        }
+        private set
+        {
+            Assert(Message.Sender == Owner, "Only contract owner can set refund block lock limit");
+            Assert(!SaleOpen, "Sale is open");
+            PersistentState.SetUInt64(nameof(NoRefundBlocks), value);
         }
     }
 
@@ -64,6 +96,11 @@ public class TicketContract : SmartContract
         }
     }
 
+    /// <summary>
+    /// Starts a ticket sale, when no sale is running
+    /// </summary>
+    /// <param name="ticketsBytes">The serialized array of tickets</param>
+    /// <param name="showBytes">Serialized metadata for the event</param>
     public void BeginSale(byte[] ticketsBytes, byte[] showBytes)
     {
         var show = Serializer.ToStruct<Show>(showBytes);
@@ -95,6 +132,9 @@ public class TicketContract : SmartContract
         Log(show);
     }
 
+    /// <summary>
+    /// Called after the ending of a ticket sale to clear the contract ticket data
+    /// </summary>
     public void EndSale()
     {
         Assert(Message.Sender == Owner, "Only contract owner can end sale");
@@ -105,6 +145,11 @@ public class TicketContract : SmartContract
         EndOfSale = default(ulong);
     }
 
+    /// <summary>
+    /// Checks the availability of a seat
+    /// </summary>
+    /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
+    /// <returns>Whether the seat is available</returns>
     public bool CheckAvailability(byte[] seatIdentifierBytes)
     {
         Assert(SaleOpen, "Sale not open");
@@ -116,6 +161,11 @@ public class TicketContract : SmartContract
         return IsAvailable(ticket);
     }
 
+    /// <summary>
+    /// Reserves a ticket for the callers address
+    /// </summary>
+    /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
+    /// <returns>Whether the seat was successfully reserved</returns>
     public bool Reserve(byte[] seatIdentifierBytes)
     {
         if (!SaleOpen)
@@ -169,6 +219,12 @@ public class TicketContract : SmartContract
         return true;
     }
 
+    /// <summary>
+    /// Used to verify whether an address owns a ticket
+    /// </summary>
+    /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
+    /// <param name="address">The address to verify</param>
+    /// <returns>Whether verification is successful</returns>
     public bool OwnsTicket(byte[] seatIdentifierBytes, Address address)
     {
         Assert(address != Address.Zero, "Invalid address");
@@ -180,14 +236,32 @@ public class TicketContract : SmartContract
         return ticket.Address == address;
     }
 
+    /// <summary>
+    /// Sets the fee to refund a ticket to the contract
+    /// </summary>
+    /// <param name="releaseFee">The refund fee</param>
     public void SetReleaseFee(ulong releaseFee)
     {
         ReleaseFee = releaseFee;
     }
 
+    /// <summary>
+    /// Sets the block limit for issuing refunds on purchased tickets
+    /// </summary>
+    /// <param name="noRefundBlocks">The number of blocks before the end of the contract to disallow refunds</param>
+    public void SetNoRefundBlocks(ulong noRefundBlocks)
+    {
+        NoRefundBlocks = noRefundBlocks;
+    }
+
+    /// <summary>
+    /// Requests a refund for a ticket, which will be issued if the <see cref="NoRefundBlocks" /> limit is not yet reached
+    /// </summary>
+    /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
     public void ReleaseTicket(byte[] seatIdentifierBytes)
     {
         Assert(SaleOpen, "Sale not open");
+        Assert(Block.Number + NoRefundBlocks < EndOfSale, "Surpassed no refund block limit");
 
         var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
         var copyOfTickets = Tickets;
@@ -271,6 +345,9 @@ public class TicketContract : SmartContract
         return seats;
     }
 
+    /// <summary>
+    /// Identifies a specific seat by number and/or letter
+    /// </summary>
     public struct Seat
     {
         public int Number;
@@ -278,6 +355,9 @@ public class TicketContract : SmartContract
         public char Letter;
     }
 
+    /// <summary>
+    /// Represents a ticket for a specific seat
+    /// </summary>
     public struct Ticket
     {
         public Seat Seat;
@@ -287,11 +367,17 @@ public class TicketContract : SmartContract
         public Address Address;
     }
 
+    /// <summary>
+    /// Stores metadata about the ticketing contract, which cannot be changed
+    /// </summary>
     public struct Venue
     {
         public string Name;
     }
 
+    /// <summary>
+    /// Stores metadata relating to a specific ticket sale
+    /// </summary>
     public struct Show
     {
         public string Name;
