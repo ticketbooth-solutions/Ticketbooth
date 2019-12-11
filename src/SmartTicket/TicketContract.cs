@@ -6,13 +6,28 @@ public class TicketContract : SmartContract
     /// Creates a new ticketing contract
     /// </summary>
     /// <param name="smartContractState"></param>
-    /// <param name="ticketsBytes">The serialized array of tickets</param>
-    /// <param name="venueBytes">Serialized metadata for the venue</param>
-    public TicketContract(ISmartContractState smartContractState, byte[] ticketsBytes, byte[] venueBytes) : base(smartContractState)
+    /// <param name="seatsBytes">The serialized array of seats</param>
+    /// <param name="venueName">The venue that hosts the contract</param>
+    public TicketContract(ISmartContractState smartContractState, byte[] seatsBytes, string venueName) : base(smartContractState)
     {
-        Log(Serializer.ToStruct<Venue>(venueBytes));
+        var seats = Serializer.ToArray<Seat>(seatsBytes);
+        var tickets = new Ticket[seats.Length];
+
+        for (int i = 0; i < seats.Length; i++)
+        {
+            // assert uniqueness
+            var next = i + 1;
+            for (int j = next; j < seats.Length; j++)
+            {
+                Assert(!SeatsAreEqual(seats[i], seats[j]), "Seats must all be unique");
+            }
+
+            tickets[i] = new Ticket { Seat = seats[i] };
+        }
+
+        Log(new Venue { Name = venueName });
         PersistentState.SetAddress(nameof(Owner), Message.Sender);
-        Tickets = ResetTickets(Serializer.ToArray<Ticket>(ticketsBytes));
+        Tickets = tickets;
     }
 
     /// <summary>
@@ -100,13 +115,15 @@ public class TicketContract : SmartContract
     /// Starts a ticket sale, when no sale is running
     /// </summary>
     /// <param name="ticketsBytes">The serialized array of tickets</param>
-    /// <param name="showBytes">Serialized metadata for the event</param>
-    public void BeginSale(byte[] ticketsBytes, byte[] showBytes)
+    /// <param name="showName">Name of the event or performance</param>
+    /// <param name="organiser">The organiser or artist</param>
+    /// <param name="time">Unix time for the event</param>
+    /// <param name="endOfSale">The block at which the sale ends</param>
+    public void BeginSale(byte[] ticketsBytes, string showName, string organiser, ulong time, ulong endOfSale)
     {
-        var show = Serializer.ToStruct<Show>(showBytes);
         Assert(Message.Sender == Owner, "Only contract owner can begin a sale");
         Assert(EndOfSale == default(ulong), "Sale currently in progress");
-        Assert(Block.Number < show.EndOfSale, "Sale must finish in the future");
+        Assert(Block.Number < endOfSale, "Sale must finish in the future");
 
         var tickets = Serializer.ToArray<Ticket>(ticketsBytes);
         var copyOfTickets = Tickets;
@@ -128,7 +145,15 @@ public class TicketContract : SmartContract
         }
 
         Tickets = copyOfTickets;
-        EndOfSale = show.EndOfSale;
+        EndOfSale = endOfSale;
+
+        var show = new Show
+        {
+            Name = showName,
+            Organiser = organiser,
+            Time = time,
+            EndOfSale = endOfSale
+        };
         Log(show);
     }
 
@@ -360,18 +385,30 @@ public class TicketContract : SmartContract
     /// </summary>
     public struct Ticket
     {
+        /// <summary>
+        /// The seat the ticket is for
+        /// </summary>
         public Seat Seat;
 
+        /// <summary>
+        /// Price of the ticket in CRS sats
+        /// </summary>
         public ulong Price;
 
+        /// <summary>
+        /// The ticket owner
+        /// </summary>
         public Address Address;
     }
 
     /// <summary>
-    /// Stores metadata about the ticketing contract, which cannot be changed
+    /// Stores metadata about the ticketing contract
     /// </summary>
     public struct Venue
     {
+        /// <summary>
+        /// Name of the venue
+        /// </summary>
         public string Name;
     }
 
@@ -380,12 +417,24 @@ public class TicketContract : SmartContract
     /// </summary>
     public struct Show
     {
+        /// <summary>
+        /// Name of the show
+        /// </summary>
         public string Name;
 
+        /// <summary>
+        /// Organiser of the show
+        /// </summary>
         public string Organiser;
 
+        /// <summary>
+        /// Unix time of the show
+        /// </summary>
         public ulong Time;
 
+        /// <summary>
+        /// Block at which the sale ends
+        /// </summary>
         public ulong EndOfSale;
     }
 }
