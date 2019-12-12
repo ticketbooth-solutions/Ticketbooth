@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using static TicketContract;
 
-namespace SmartTicket.Tests
+namespace Ticketbooth.Contract.Tests
 {
     public class TicketContractTests
     {
