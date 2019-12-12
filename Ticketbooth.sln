@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ticketbooth.Contract.Tests", "test\Ticketbooth.Tests\Ticketbooth.Contract.Tests.csproj", "{6F430255-1319-4DC2-943D-9900D43AF165}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ticketbooth.Contract.Tests", "test\Ticketbooth.Contract.Tests\Ticketbooth.Contract.Tests.csproj", "{6F430255-1319-4DC2-943D-9900D43AF165}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ticketbooth.Contract", "src\Ticketbooth\Ticketbooth.Contract.csproj", "{E0802015-EE96-4141-9A22-629C499647D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ticketbooth.Contract", "src\Ticketbooth.Contract\Ticketbooth.Contract.csproj", "{E0802015-EE96-4141-9A22-629C499647D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,6 +1,6 @@
-# SmartTicket
+# Ticketbooth
 
-[![Build Status](https://dev.azure.com/developmomentum/SmartTicket/_apis/build/status/drmathias.SmartTicket?branchName=master)](https://dev.azure.com/developmomentum/SmartTicket/_build/latest?definitionId=8&branchName=master)
+[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/drmathias.Ticketbooth?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=master)
 
 ## Overview
 
