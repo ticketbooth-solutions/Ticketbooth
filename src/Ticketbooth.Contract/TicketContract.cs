@@ -15,13 +15,6 @@ public class TicketContract : SmartContract
 
         for (int i = 0; i < seats.Length; i++)
         {
-            // assert uniqueness
-            var next = i + 1;
-            for (int j = next; j < seats.Length; j++)
-            {
-                Assert(!SeatsAreEqual(seats[i], seats[j]), "Seats must all be unique");
-            }
-
             tickets[i] = new Ticket { Seat = seats[i] };
         }
 
@@ -45,52 +38,41 @@ public class TicketContract : SmartContract
         }
     }
 
-    /// <summary>
-    /// The block at which the sale ends
-    /// </summary>
-    public ulong EndOfSale
+    private ulong EndOfSale
     {
         get
         {
             return PersistentState.GetUInt64(nameof(EndOfSale));
         }
-        private set
+        set
         {
             PersistentState.SetUInt64(nameof(EndOfSale), value);
         }
     }
 
-    /// <summary>
-    /// The cost of refunding a ticket after purchase
-    /// </summary>
-    public ulong ReleaseFee
+    private ulong ReleaseFee
     {
         get
         {
             return PersistentState.GetUInt64(nameof(ReleaseFee));
         }
-        private set
+        set
         {
-            Assert(Message.Sender == Owner, "Only contract owner can set release fee");
-            Assert(!SaleOpen, "Sale is open");
             PersistentState.SetUInt64(nameof(ReleaseFee), value);
+            Log(new TicketReleaseFee { Amount = value });
         }
     }
 
-    /// <summary>
-    /// The number of blocks before the end of the sale where refunds are not issued
-    /// </summary>
-    public ulong NoRefundBlocks
+    private ulong NoRefundBlocks
     {
         get
         {
             return PersistentState.GetUInt64(nameof(NoRefundBlocks));
         }
-        private set
+        set
         {
-            Assert(Message.Sender == Owner, "Only contract owner can set refund block lock limit");
-            Assert(!SaleOpen, "Sale is open");
             PersistentState.SetUInt64(nameof(NoRefundBlocks), value);
+            Log(new NoReleaseBlocks { Count = value });
         }
     }
 
@@ -265,18 +247,22 @@ public class TicketContract : SmartContract
     /// Sets the fee to refund a ticket to the contract
     /// </summary>
     /// <param name="releaseFee">The refund fee</param>
-    public void SetReleaseFee(ulong releaseFee)
+    public void SetTicketReleaseFee(ulong releaseFee)
     {
+        Assert(Message.Sender == Owner, "Only contract owner can set release fee");
+        Assert(!SaleOpen, "Sale is open");
         ReleaseFee = releaseFee;
     }
 
     /// <summary>
     /// Sets the block limit for issuing refunds on purchased tickets
     /// </summary>
-    /// <param name="noRefundBlocks">The number of blocks before the end of the contract to disallow refunds</param>
-    public void SetNoRefundBlocks(ulong noRefundBlocks)
+    /// <param name="noReleaseBlocks">The number of blocks before the end of the contract to disallow refunds</param>
+    public void SetNoReleaseBlocks(ulong noReleaseBlocks)
     {
-        NoRefundBlocks = noRefundBlocks;
+        Assert(Message.Sender == Owner, "Only contract owner can set no release blocks limit");
+        Assert(!SaleOpen, "Sale is open");
+        NoRefundBlocks = noReleaseBlocks;
     }
 
     /// <summary>
@@ -359,15 +345,15 @@ public class TicketContract : SmartContract
         return seat1.Number == seat2.Number && seat1.Letter == seat2.Letter;
     }
 
-    private Ticket[] ResetTickets(Ticket[] seats)
+    private Ticket[] ResetTickets(Ticket[] tickets)
     {
-        for (int i = 0; i < seats.Length; i++)
+        for (int i = 0; i < tickets.Length; i++)
         {
-            seats[i].Address = Address.Zero;
-            seats[i].Price = 0;
+            tickets[i].Address = Address.Zero;
+            tickets[i].Price = 0;
         }
 
-        return seats;
+        return tickets;
     }
 
     /// <summary>
@@ -436,5 +422,15 @@ public class TicketContract : SmartContract
         /// Block at which the sale ends
         /// </summary>
         public ulong EndOfSale;
+    }
+
+    private struct TicketReleaseFee
+    {
+        public ulong Amount;
+    }
+
+    private struct NoReleaseBlocks
+    {
+        public ulong Count;
     }
 }

@@ -75,39 +75,6 @@ namespace Ticketbooth.Contract.Tests
         }
 
         [Test]
-        public void OnConstructed_SeatsAreNotUnique_ThrowsAssertException()
-        {
-            // Arrange
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var copyOfSeats = (Seat[])_seats.Clone();
-            copyOfSeats[1] = copyOfSeats[0];
-
-            var seats = _serializer.Serialize(copyOfSeats);
-
-            // Act
-            var constructionAction = new Action(() => new TicketContract(_smartContractState.Object, seats, _venueName));
-
-            // Assert
-            Assert.That(constructionAction, Throws.TypeOf<SmartContractAssertException>());
-        }
-
-        [Test]
-        public void OnConstructed_CanBeConstructed_ThrowsNothing()
-        {
-            // Arrange
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var seats = _serializer.Serialize(_seats);
-
-            // Act
-            var constructionAction = new Action(() => new TicketContract(_smartContractState.Object, seats, _venueName));
-
-            // Assert
-            Assert.That(constructionAction, Throws.Nothing);
-        }
-
-        [Test]
         public void OnConstructed_Logs_Venue()
         {
             // Arrange
@@ -163,7 +130,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             var performance = _performance;
             performance.EndOfSale = 55;
@@ -185,7 +152,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(new Address(3, 2, 5, 4, 2));
 
@@ -206,7 +173,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(50);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
 
@@ -229,7 +196,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(55);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
@@ -249,7 +216,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             var tickets = Tickets;
@@ -272,7 +239,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
@@ -292,7 +259,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
@@ -313,14 +280,14 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(1);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
             ticketContract.BeginSale(_serializer.Serialize(Tickets), _showName, _showOrganiser, _showTime, 55);
 
             // Assert
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.EndOfSale), 55));
+            _persistentState.Verify(callTo => callTo.SetUInt64("EndOfSale", 55));
         }
 
         [Test]
@@ -333,7 +300,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(new Address(1, 3, 4, 2, 6));
 
@@ -354,7 +321,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
 
@@ -375,7 +342,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(99);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
 
@@ -396,7 +363,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
 
@@ -417,7 +384,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
 
@@ -439,7 +406,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
 
@@ -447,7 +414,7 @@ namespace Ticketbooth.Contract.Tests
             ticketContract.EndSale();
 
             // Assert
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.EndOfSale), 0));
+            _persistentState.Verify(callTo => callTo.SetUInt64("EndOfSale", 0));
         }
 
         [Test]
@@ -462,7 +429,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
 
             // Act
             var checkAvailabilityCall = new Action(() => ticketContract.CheckAvailability(_serializer.Serialize(querySeat)));
@@ -484,7 +451,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(currentBlock);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
             var checkAvailabilityCall = new Action(() => ticketContract.CheckAvailability(_serializer.Serialize(querySeat)));
@@ -505,7 +472,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(500);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(500);
 
             // Act
             var checkAvailabilityCall = new Action(() => ticketContract.CheckAvailability(_serializer.Serialize(querySeat)));
@@ -531,7 +498,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(500);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(500);
 
             // Act
             var availability = ticketContract.CheckAvailability(_serializer.Serialize(querySeat));
@@ -557,7 +524,7 @@ namespace Ticketbooth.Contract.Tests
 
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(500);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(500);
 
             // Act
             var availability = ticketContract.CheckAvailability(_serializer.Serialize(querySeat));
@@ -582,7 +549,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(100);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
 
             // Act
             var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat)));
@@ -609,7 +576,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(currentBlock);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
             var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat)));
@@ -635,7 +602,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
             var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat)));
@@ -666,7 +633,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
             var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
@@ -697,7 +664,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
             var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
@@ -729,7 +696,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
             var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
@@ -760,7 +727,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
             var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
@@ -791,7 +758,7 @@ namespace Ticketbooth.Contract.Tests
             _message.Setup(callTo => callTo.Value).Returns(amount);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             _persistentState.Invocations.Clear();
 
@@ -943,17 +910,17 @@ namespace Ticketbooth.Contract.Tests
 
             var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
 
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(new Address(5, 5, 5, 5, 99));
 
             // Act
-            var setReleaseFeeCall = new Action(() => ticketContract.SetReleaseFee(5));
+            var setReleaseFeeCall = new Action(() => ticketContract.SetTicketReleaseFee(5));
 
             // Assert
             Assert.That(setReleaseFeeCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.ReleaseFee), It.IsAny<ulong>()), Times.Never);
+            _persistentState.Verify(callTo => callTo.SetUInt64("ReleaseFee", It.IsAny<ulong>()), Times.Never);
         }
 
         [Test]
@@ -964,16 +931,16 @@ namespace Ticketbooth.Contract.Tests
 
             var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
 
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
-            var setReleaseFeeCall = new Action(() => ticketContract.SetReleaseFee(5));
+            var setReleaseFeeCall = new Action(() => ticketContract.SetTicketReleaseFee(5));
 
             // Assert
             Assert.That(setReleaseFeeCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.ReleaseFee), It.IsAny<ulong>()), Times.Never);
+            _persistentState.Verify(callTo => callTo.SetUInt64("ReleaseFee", It.IsAny<ulong>()), Times.Never);
         }
 
         [Test]
@@ -984,16 +951,16 @@ namespace Ticketbooth.Contract.Tests
 
             var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
 
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(20);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(20);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
-            var setReleaseFeeCall = new Action(() => ticketContract.SetReleaseFee(5));
+            var setReleaseFeeCall = new Action(() => ticketContract.SetTicketReleaseFee(5));
 
             // Assert
             Assert.That(setReleaseFeeCall, Throws.Nothing);
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.ReleaseFee), 5), Times.Once);
+            _persistentState.Verify(callTo => callTo.SetUInt64("ReleaseFee", 5), Times.Once);
         }
 
         [Test]
@@ -1004,17 +971,17 @@ namespace Ticketbooth.Contract.Tests
 
             var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
 
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(0);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
             _message.Setup(callTo => callTo.Sender).Returns(new Address(5, 5, 5, 5, 99));
 
             // Act
-            var setNoRefundBlocksCall = new Action(() => ticketContract.SetNoRefundBlocks(500));
+            var setNoRefundBlocksCall = new Action(() => ticketContract.SetNoReleaseBlocks(500));
 
             // Assert
             Assert.That(setNoRefundBlocksCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.NoRefundBlocks), It.IsAny<ulong>()), Times.Never);
+            _persistentState.Verify(callTo => callTo.SetUInt64("NoRefundBlocks", It.IsAny<ulong>()), Times.Never);
         }
 
         [Test]
@@ -1025,16 +992,16 @@ namespace Ticketbooth.Contract.Tests
 
             var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
 
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
-            var setNoRefundBlocksCall = new Action(() => ticketContract.SetNoRefundBlocks(500));
+            var setNoRefundBlocksCall = new Action(() => ticketContract.SetNoReleaseBlocks(500));
 
             // Assert
             Assert.That(setNoRefundBlocksCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.NoRefundBlocks), It.IsAny<ulong>()), Times.Never);
+            _persistentState.Verify(callTo => callTo.SetUInt64("NoRefundBlocks", It.IsAny<ulong>()), Times.Never);
         }
 
         [Test]
@@ -1045,16 +1012,16 @@ namespace Ticketbooth.Contract.Tests
 
             var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
 
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(20);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(20);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _persistentState.Setup(callTo => callTo.GetAddress("Owner")).Returns(_ownerAddress);
 
             // Act
-            var setNoRefundBlocksCall = new Action(() => ticketContract.SetNoRefundBlocks(500));
+            var setNoRefundBlocksCall = new Action(() => ticketContract.SetNoReleaseBlocks(500));
 
             // Assert
             Assert.That(setNoRefundBlocksCall, Throws.Nothing);
-            _persistentState.Verify(callTo => callTo.SetUInt64(nameof(TicketContract.NoRefundBlocks), 500), Times.Once);
+            _persistentState.Verify(callTo => callTo.SetUInt64("NoRefundBlocks", 500), Times.Once);
         }
 
         [Test]
@@ -1075,7 +1042,7 @@ namespace Ticketbooth.Contract.Tests
             }
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
             _block.Setup(callTo => callTo.Number).Returns(101);
             _message.Setup(callTo => callTo.Sender).Returns(address);
 
@@ -1105,8 +1072,8 @@ namespace Ticketbooth.Contract.Tests
             }
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.NoRefundBlocks))).Returns(noRefundBlockLimit);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(noRefundBlockLimit);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(address);
 
@@ -1135,8 +1102,8 @@ namespace Ticketbooth.Contract.Tests
             }
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.NoRefundBlocks))).Returns(10);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(address);
 
@@ -1164,8 +1131,8 @@ namespace Ticketbooth.Contract.Tests
             tickets[targetIndex].Address = address;
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.NoRefundBlocks))).Returns(10);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(new Address(5, 5, 5, 5, 5));
 
@@ -1193,8 +1160,8 @@ namespace Ticketbooth.Contract.Tests
             tickets[targetIndex].Address = address;
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.NoRefundBlocks))).Returns(10);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(address);
 
@@ -1226,11 +1193,11 @@ namespace Ticketbooth.Contract.Tests
             tickets[targetIndex].Price = ticketPrice;
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.NoRefundBlocks))).Returns(10);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(address);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.ReleaseFee))).Returns(releaseFee);
+            _persistentState.Setup(callTo => callTo.GetUInt64("ReleaseFee")).Returns(releaseFee);
 
             // Act
             ticketContract.ReleaseTicket(_serializer.Serialize(querySeat));
@@ -1260,11 +1227,11 @@ namespace Ticketbooth.Contract.Tests
             tickets[targetIndex].Price = ticketPrice;
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.NoRefundBlocks))).Returns(10);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(address);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.ReleaseFee))).Returns(releaseFee);
+            _persistentState.Setup(callTo => callTo.GetUInt64("ReleaseFee")).Returns(releaseFee);
 
             // Act
             ticketContract.ReleaseTicket(_serializer.Serialize(querySeat));
@@ -1290,8 +1257,8 @@ namespace Ticketbooth.Contract.Tests
             tickets[targetIndex].Address = address;
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.EndOfSale))).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64(nameof(TicketContract.NoRefundBlocks))).Returns(10);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(address);
 
