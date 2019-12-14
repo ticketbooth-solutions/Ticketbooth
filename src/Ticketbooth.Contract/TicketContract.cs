@@ -63,16 +63,16 @@ public class TicketContract : SmartContract
         }
     }
 
-    private ulong NoRefundBlocks
+    private ulong NoRefundBlockCount
     {
         get
         {
-            return PersistentState.GetUInt64(nameof(NoRefundBlocks));
+            return PersistentState.GetUInt64(nameof(NoRefundBlockCount));
         }
         set
         {
-            PersistentState.SetUInt64(nameof(NoRefundBlocks), value);
-            Log(new NoReleaseBlocks { Count = value });
+            PersistentState.SetUInt64(nameof(NoRefundBlockCount), value);
+            Log(new NoRefundBlocks { Count = value });
         }
     }
 
@@ -262,17 +262,17 @@ public class TicketContract : SmartContract
     {
         Assert(Message.Sender == Owner, "Only contract owner can set no release blocks limit");
         Assert(!SaleOpen, "Sale is open");
-        NoRefundBlocks = noReleaseBlocks;
+        NoRefundBlockCount = noReleaseBlocks;
     }
 
     /// <summary>
-    /// Requests a refund for a ticket, which will be issued if the <see cref="NoRefundBlocks" /> limit is not yet reached
+    /// Requests a refund for a ticket, which will be issued if the no refund block limit is not yet reached
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
     public void ReleaseTicket(byte[] seatIdentifierBytes)
     {
         Assert(SaleOpen, "Sale not open");
-        Assert(Block.Number + NoRefundBlocks < EndOfSale, "Surpassed no refund block limit");
+        Assert(Block.Number + NoRefundBlockCount < EndOfSale, "Surpassed no refund block limit");
 
         var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
         var copyOfTickets = Tickets;
@@ -388,7 +388,7 @@ public class TicketContract : SmartContract
     }
 
     /// <summary>
-    /// Stores metadata about the ticketing contract
+    /// Represents the venue or the event organiser
     /// </summary>
     public struct Venue
     {
@@ -424,13 +424,25 @@ public class TicketContract : SmartContract
         public ulong EndOfSale;
     }
 
-    private struct TicketReleaseFee
+    /// <summary>
+    /// Represents the fee that is charged if a ticket is released from an address
+    /// </summary>
+    public struct TicketReleaseFee
     {
+        /// <summary>
+        /// The release fee, in sats
+        /// </summary>
         public ulong Amount;
     }
 
-    private struct NoReleaseBlocks
+    /// <summary>
+    /// Represents the number of blocks before the end of the contract, where refunds are not allowed
+    /// </summary>
+    public struct NoRefundBlocks
     {
+        /// <summary>
+        /// The number of no refund blocks
+        /// </summary>
         public ulong Count;
     }
 }

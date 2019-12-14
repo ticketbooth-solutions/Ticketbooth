@@ -1021,7 +1021,7 @@ namespace Ticketbooth.Contract.Tests
 
             // Assert
             Assert.That(setNoRefundBlocksCall, Throws.Nothing);
-            _persistentState.Verify(callTo => callTo.SetUInt64("NoRefundBlocks", 500), Times.Once);
+            _persistentState.Verify(callTo => callTo.SetUInt64("NoRefundBlockCount", 500), Times.Once);
         }
 
         [Test]
@@ -1073,7 +1073,7 @@ namespace Ticketbooth.Contract.Tests
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
-            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(noRefundBlockLimit);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlockCount")).Returns(noRefundBlockLimit);
             _block.Setup(callTo => callTo.Number).Returns(50);
             _message.Setup(callTo => callTo.Sender).Returns(address);
 
