@@ -8,7 +8,9 @@ public class TicketContract : SmartContract
     /// <param name="smartContractState"></param>
     /// <param name="seatsBytes">The serialized array of seats</param>
     /// <param name="venueName">The venue that hosts the contract</param>
-    public TicketContract(ISmartContractState smartContractState, byte[] seatsBytes, string venueName) : base(smartContractState)
+    /// <param name="requiresIdentityVerification">Whether the venue verifies ticket holder identity</param>
+    public TicketContract(ISmartContractState smartContractState, byte[] seatsBytes, string venueName, bool requiresIdentityVerification)
+        : base(smartContractState)
     {
         var seats = Serializer.ToArray<Seat>(seatsBytes);
         var tickets = new Ticket[seats.Length];
@@ -18,8 +20,13 @@ public class TicketContract : SmartContract
             tickets[i] = new Ticket { Seat = seats[i] };
         }
 
-        Log(new Venue { Name = venueName });
-        PersistentState.SetAddress(nameof(Owner), Message.Sender);
+        Log(new Venue
+        {
+            Name = venueName,
+            VerifiesIdentity = requiresIdentityVerification
+        });
+        RequireIdentityVerification = requiresIdentityVerification;
+        Owner = Message.Sender;
         Tickets = tickets;
     }
 
@@ -76,20 +83,36 @@ public class TicketContract : SmartContract
         }
     }
 
+    private Address Owner
+    {
+        get
+        {
+            return PersistentState.GetAddress(nameof(Owner));
+        }
+        set
+        {
+            PersistentState.SetAddress(nameof(Owner), value);
+        }
+    }
+
+    private bool RequireIdentityVerification
+    {
+        get
+        {
+            return PersistentState.GetBool(nameof(RequireIdentityVerification));
+        }
+        set
+        {
+            PersistentState.SetBool(nameof(RequireIdentityVerification), value);
+        }
+    }
+
     private bool SaleOpen
     {
         get
         {
             var endOfSale = EndOfSale;
             return endOfSale != 0 && Block.Number < endOfSale;
-        }
-    }
-
-    private Address Owner
-    {
-        get
-        {
-            return PersistentState.GetAddress(nameof(Owner));
         }
     }
 
@@ -186,6 +209,14 @@ public class TicketContract : SmartContract
     /// <returns>Whether the seat was successfully reserved</returns>
     public bool Reserve(byte[] seatIdentifierBytes, string customerIdentifier)
     {
+        // no identity
+        if (RequireIdentityVerification && string.IsNullOrWhiteSpace(customerIdentifier))
+        {
+            Refund(Message.Value);
+            Assert(false, "Customer identifier is required");
+        }
+
+        // sale closed
         if (!SaleOpen)
         {
             Refund(Message.Value);
@@ -424,6 +455,11 @@ public class TicketContract : SmartContract
         /// Name of the venue
         /// </summary>
         public string Name;
+
+        /// <summary>
+        /// Whether the venue requires identity verification on the door
+        /// </summary>
+        public bool VerifiesIdentity;
     }
 
     /// <summary>
