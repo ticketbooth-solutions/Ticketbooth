@@ -175,6 +175,17 @@ public class TicketContract : SmartContract
     /// <returns>Whether the seat was successfully reserved</returns>
     public bool Reserve(byte[] seatIdentifierBytes)
     {
+        return Reserve(seatIdentifierBytes, string.Empty);
+    }
+
+    /// <summary>
+    /// Reserves a ticket for the callers address and with an identifier for the customer
+    /// </summary>
+    /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
+    /// <param name="customerIdentifier">A verifiable identifier for the customer</param>
+    /// <returns>Whether the seat was successfully reserved</returns>
+    public bool Reserve(byte[] seatIdentifierBytes, string customerIdentifier)
+    {
         if (!SaleOpen)
         {
             Refund(Message.Value);
@@ -222,6 +233,7 @@ public class TicketContract : SmartContract
         }
 
         copyOfTickets[ticketIndex].Address = Message.Sender;
+        copyOfTickets[ticketIndex].CustomerIdentifier = customerIdentifier;
         Tickets = copyOfTickets;
         return true;
     }
@@ -231,8 +243,8 @@ public class TicketContract : SmartContract
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
     /// <param name="address">The address to verify</param>
-    /// <returns>Whether verification is successful</returns>
-    public bool OwnsTicket(byte[] seatIdentifierBytes, Address address)
+    /// <returns>The result of the reservation query</returns>
+    public ReservationQueryResult CheckReservation(byte[] seatIdentifierBytes, Address address)
     {
         Assert(address != Address.Zero, "Invalid address");
 
@@ -240,7 +252,11 @@ public class TicketContract : SmartContract
 
         Assert(!IsDefaultSeat(ticket.Seat), "Seat not found");
 
-        return ticket.Address == address;
+        return new ReservationQueryResult
+        {
+            OwnsTicket = address == ticket.Address,
+            CustomerIdentifier = ticket.CustomerIdentifier
+        };
     }
 
     /// <summary>
@@ -351,6 +367,7 @@ public class TicketContract : SmartContract
         {
             tickets[i].Address = Address.Zero;
             tickets[i].Price = 0;
+            tickets[i].CustomerIdentifier = string.Empty;
         }
 
         return tickets;
@@ -361,8 +378,14 @@ public class TicketContract : SmartContract
     /// </summary>
     public struct Seat
     {
+        /// <summary>
+        /// A number identifying the seat
+        /// </summary>
         public int Number;
 
+        /// <summary>
+        /// A letter identifying the seat
+        /// </summary>
         public char Letter;
     }
 
@@ -385,6 +408,11 @@ public class TicketContract : SmartContract
         /// The ticket owner
         /// </summary>
         public Address Address;
+
+        /// <summary>
+        /// Used by the venue to check identity
+        /// </summary>
+        public string CustomerIdentifier;
     }
 
     /// <summary>
@@ -444,5 +472,21 @@ public class TicketContract : SmartContract
         /// The number of no refund blocks
         /// </summary>
         public ulong Count;
+    }
+
+    /// <summary>
+    /// The ticket reservation query result
+    /// </summary>
+    public struct ReservationQueryResult
+    {
+        /// <summary>
+        /// Whether the ticket is owned by the Address
+        /// </summary>
+        public bool OwnsTicket;
+
+        /// <summary>
+        /// A verifiable identifier for the ticket holder
+        /// </summary>
+        public string CustomerIdentifier;
     }
 }
