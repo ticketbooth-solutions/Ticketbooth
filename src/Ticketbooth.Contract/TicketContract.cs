@@ -8,8 +8,7 @@ public class TicketContract : SmartContract
     /// <param name="smartContractState"></param>
     /// <param name="seatsBytes">The serialized array of seats</param>
     /// <param name="venueName">The venue that hosts the contract</param>
-    /// <param name="requiresIdentityVerification">Whether the venue verifies ticket holder identity</param>
-    public TicketContract(ISmartContractState smartContractState, byte[] seatsBytes, string venueName, bool requiresIdentityVerification)
+    public TicketContract(ISmartContractState smartContractState, byte[] seatsBytes, string venueName)
         : base(smartContractState)
     {
         var seats = Serializer.ToArray<Seat>(seatsBytes);
@@ -20,12 +19,7 @@ public class TicketContract : SmartContract
             tickets[i] = new Ticket { Seat = seats[i] };
         }
 
-        Log(new Venue
-        {
-            Name = venueName,
-            VerifiesIdentity = requiresIdentityVerification
-        });
-        RequireIdentityVerification = requiresIdentityVerification;
+        Log(new Venue { Name = venueName });
         Owner = Message.Sender;
         Tickets = tickets;
     }
@@ -83,18 +77,6 @@ public class TicketContract : SmartContract
         }
     }
 
-    private Address Owner
-    {
-        get
-        {
-            return PersistentState.GetAddress(nameof(Owner));
-        }
-        set
-        {
-            PersistentState.SetAddress(nameof(Owner), value);
-        }
-    }
-
     private bool RequireIdentityVerification
     {
         get
@@ -104,6 +86,19 @@ public class TicketContract : SmartContract
         set
         {
             PersistentState.SetBool(nameof(RequireIdentityVerification), value);
+            Log(new IdentityVerificationPolicy { RequireIdentityVerification = value });
+        }
+    }
+
+    private Address Owner
+    {
+        get
+        {
+            return PersistentState.GetAddress(nameof(Owner));
+        }
+        set
+        {
+            PersistentState.SetAddress(nameof(Owner), value);
         }
     }
 
@@ -313,6 +308,17 @@ public class TicketContract : SmartContract
     }
 
     /// <summary>
+    /// Sets the identity verification policy of the venue
+    /// </summary>
+    /// <param name="requireIdentityVerification">Whether the venue requires identity verification</param>
+    public void SetIdentityVerificationPolicy(bool requireIdentityVerification)
+    {
+        Assert(Message.Sender == Owner, "Only contract owner can set identity verification policy");
+        Assert(!SaleOpen, "Sale is open");
+        RequireIdentityVerification = requireIdentityVerification;
+    }
+
+    /// <summary>
     /// Requests a refund for a ticket, which will be issued if the no refund block limit is not yet reached
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
@@ -343,6 +349,7 @@ public class TicketContract : SmartContract
             TryTransfer(Message.Sender, ticket.Price - ReleaseFee);
         }
         copyOfTickets[ticketIndex].Address = Address.Zero;
+        copyOfTickets[ticketIndex].CustomerIdentifier = null;
         Tickets = copyOfTickets;
     }
 
@@ -508,6 +515,17 @@ public class TicketContract : SmartContract
         /// The number of no refund blocks
         /// </summary>
         public ulong Count;
+    }
+
+    /// <summary>
+    /// Represents the identity verification policy of the venue
+    /// </summary>
+    public struct IdentityVerificationPolicy
+    {
+        /// <summary>
+        /// Whether the venue requires identity verification
+        /// </summary>
+        public bool RequireIdentityVerification;
     }
 
     /// <summary>
