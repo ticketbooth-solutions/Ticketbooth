@@ -11,3 +11,5 @@ This can be integrated with a payment gateway, ticket sales platform and managed
 ## Documentation
 
 Contract documentation is available on the [wiki](https://github.com/drmathias/Ticketbooth/wiki), along with a case study.
+
+### Further work is continuing on master. The work completed for the hackathon can be found in the ```hackathon-submission``` branch.
