@@ -7,7 +7,8 @@
     <Authors>Adam Shirt</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.4</Version>
+    <Version>1.0.0-rc1</Version>
+    <PackageId>Ticketbooth</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Stratis.SmartContracts" Version="1.2.1" />
