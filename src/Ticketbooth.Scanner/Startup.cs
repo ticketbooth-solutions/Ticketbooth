@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Stratis.SmartContracts;
+using Stratis.SmartContracts.CLR.Serialization;
+using Ticketbooth.Scanner.Services;
 
 namespace Ticketbooth.Scanner
 {
@@ -19,6 +22,9 @@ namespace Ticketbooth.Scanner
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
+            services.AddSingleton<ISerializer>(new Serializer(new ContractPrimitiveSerializer(null)));
+            services.AddScoped<ITicketService, TicketService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
