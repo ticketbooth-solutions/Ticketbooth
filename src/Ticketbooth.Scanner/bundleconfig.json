@@ -1,0 +1,8 @@
+[
+  {
+    "outputFileName": "wwwroot/lib/feather-icons/feather.min.js",
+    "inputFiles": [
+      "wwwroot/lib/feather-icons/feather.js"
+    ]
+  }
+]
