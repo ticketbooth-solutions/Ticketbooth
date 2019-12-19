@@ -6,8 +6,8 @@ using Microsoft.Extensions.Hosting;
 using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Serialization;
+using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Services;
-using Ticketbooth.Scanner.ViewModels;
 
 namespace Ticketbooth.Scanner
 {
@@ -30,7 +30,7 @@ namespace Ticketbooth.Scanner
             services.AddSingleton<ISerializer, Serializer>();
             services.AddScoped<ISmartContractService, SmartContractService>();
             services.AddScoped<ITicketService, TicketService>();
-            services.AddTransient<IResultViewModel, ResultViewModel>();
+            services.AddScoped<ITicketChecker, TicketChecker>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

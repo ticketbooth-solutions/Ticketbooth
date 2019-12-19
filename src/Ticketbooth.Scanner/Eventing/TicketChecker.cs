@@ -2,48 +2,40 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Eventing.Args;
 using Ticketbooth.Scanner.Services;
-using static TicketContract;
 
-namespace Ticketbooth.Scanner.ViewModels
+namespace Ticketbooth.Scanner.Eventing
 {
-    public class ResultViewModel : IResultViewModel
+    public class TicketChecker : ITicketChecker
     {
         private readonly ISmartContractService _smartContractService;
         private readonly ITicketService _ticketService;
 
-        public bool OwnsTicket { get; private set; }
-
-        public string Name { get; private set; }
-
-        public Seat Seat { get; private set; }
-
-        public ResultViewModel(ISmartContractService smartContractService, ITicketService ticketService)
+        public TicketChecker(ISmartContractService smartContractService, ITicketService ticketService)
         {
             _smartContractService = smartContractService;
             _ticketService = ticketService;
         }
 
-        public async Task PerformTicketCheckAsync(Seat seat, Address address, CancellationToken cancellationToken)
-        {
-            Seat = seat;
+        public EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult { get; set; }
 
+        public async Task PerformTicketCheckAsync(TicketContract.Seat seat, Address address, CancellationToken cancellationToken)
+        {
             var checkReservationResponse = await _ticketService.CheckReservationAsync(seat, address);
             if (checkReservationResponse is null || !checkReservationResponse.Success)
             {
-                OwnsTicket = false;
-                Name = string.Empty;
+                OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(seat, false, null));
                 return;
             }
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var reservationResultReceipt = await _smartContractService.FetchReceiptAsync<ReservationQueryResult>(checkReservationResponse.TransactionId);
+                var reservationResultReceipt = await _smartContractService.FetchReceiptAsync<TicketContract.ReservationQueryResult>(checkReservationResponse.TransactionId);
                 if (!(reservationResultReceipt is null))
                 {
                     var reservationResult = reservationResultReceipt.ReturnValue;
-                    OwnsTicket = reservationResult.OwnsTicket;
-                    Name = reservationResult.CustomerIdentifier ?? string.Empty;
+                    OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(seat, reservationResult.OwnsTicket, reservationResult.CustomerIdentifier));
                     return;
                 }
 
