@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Serialization;
 using Ticketbooth.Scanner.Services;
+using Ticketbooth.Scanner.ViewModels;
 
 namespace Ticketbooth.Scanner
 {
@@ -23,8 +25,12 @@ namespace Ticketbooth.Scanner
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            services.AddSingleton<ISerializer>(new Serializer(new ContractPrimitiveSerializer(null)));
+            services.AddSingleton(CirrusNetwork.NetworksSelector.Mainnet());
+            services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
+            services.AddSingleton<ISerializer, Serializer>();
+            services.AddScoped<ISmartContractService, SmartContractService>();
             services.AddScoped<ITicketService, TicketService>();
+            services.AddTransient<IResultViewModel, ResultViewModel>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

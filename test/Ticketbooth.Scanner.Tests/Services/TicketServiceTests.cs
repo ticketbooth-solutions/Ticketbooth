@@ -1,9 +1,13 @@
 ﻿using Flurl.Http.Testing;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using NBitcoin;
+using Newtonsoft.Json;
 using NUnit.Framework;
+using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Services;
 using static TicketContract;
 
@@ -11,8 +15,10 @@ namespace Ticketbooth.Scanner.Tests.Services
 {
     public class TicketServiceTests
     {
+        private readonly Address _validAddress = new Address(556352392, 393654450, 1497506724, 2697943157, 1670988474);
+        private readonly Network _networkInstance = CirrusNetwork.NetworksSelector.Mainnet.Invoke();
+
         private Mock<IConfiguration> _configuration;
-        private Mock<ISerializer> _serializer;
         private HttpTest _httpTest;
         private ITicketService _ticketService;
 
@@ -28,7 +34,6 @@ namespace Ticketbooth.Scanner.Tests.Services
             _configuration.Setup(callTo => callTo["Stratis:Wallet"]).Returns("test_wallet");
             _configuration.Setup(callTo => callTo["Stratis:Password"]).Returns("d7hs73nfko-0kso09e");
             _configuration.Setup(callTo => callTo["Stratis:Address"]).Returns("CUtNvY1Jxpn4V4RD1tgphsUKpQdo4q5i54");
-            _serializer = new Mock<ISerializer>();
             _httpTest = new HttpTest();
         }
 
@@ -42,18 +47,20 @@ namespace Ticketbooth.Scanner.Tests.Services
         public async Task CheckReservation_200_ReturnsResponse()
         {
             // Arrange
-            var reservationQueryResult = new ReservationQueryResult { OwnsTicket = true, CustomerIdentifier = "Hermon" };
+            var methodCallResponse = new MethodCallResponse { Success = true };
             var seat = new Seat { Number = 1, Letter = 'C' };
-            var address = new Address(503, 392, 93492, 394, 382);
-            _ticketService = new TicketService(_configuration.Object, _serializer.Object);
+            var address = _validAddress;
+            _ticketService = new TicketService(_configuration.Object, Mock.Of<ISerializer>(), _networkInstance);
 
-            _httpTest.RespondWithJson(reservationQueryResult, status: 200);
+            _httpTest.RespondWithJson(methodCallResponse, status: 200);
 
             // Act
-            var result = await _ticketService.CheckReservation(seat, address);
+            var result = await _ticketService.CheckReservationAsync(seat, address);
 
             // Assert
-            Assert.That(result, Is.EqualTo(reservationQueryResult));
+            var expected = JsonConvert.SerializeObject(methodCallResponse);
+            var actual = JsonConvert.SerializeObject(result);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -62,15 +69,15 @@ namespace Ticketbooth.Scanner.Tests.Services
             // Arrange
             var seat = new Seat { Number = 1, Letter = 'C' };
             var address = new Address(503, 392, 93492, 394, 382);
-            _ticketService = new TicketService(_configuration.Object, _serializer.Object);
+            _ticketService = new TicketService(_configuration.Object, Mock.Of<ISerializer>(), _networkInstance);
 
             _httpTest.RespondWith(status: 400);
 
             // Act
-            var result = await _ticketService.CheckReservation(seat, address);
+            var result = await _ticketService.CheckReservationAsync(seat, address);
 
             // Assert
-            Assert.That(result, Is.EqualTo(default(ReservationQueryResult)));
+            Assert.That(result, Is.EqualTo(default(MethodCallResponse)));
         }
     }
 }

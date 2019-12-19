@@ -1,10 +1,14 @@
 ﻿using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Configuration;
+using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.SmartContracts;
+using Stratis.SmartContracts.CLR;
+using System;
 using System.Net;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Data;
 
 namespace Ticketbooth.Scanner.Services
 {
@@ -12,11 +16,13 @@ namespace Ticketbooth.Scanner.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ISerializer _serializer;
+        private readonly Network _network;
 
-        public TicketService(IConfiguration configuration, ISerializer serializer)
+        public TicketService(IConfiguration configuration, ISerializer serializer, Network network)
         {
             _configuration = configuration;
             _serializer = serializer;
+            _network = network;
         }
 
         private IFlurlRequest BaseRequest =>
@@ -30,21 +36,24 @@ namespace Ticketbooth.Scanner.Services
                 .WithHeader("WalletPassword", _configuration["Stratis:Password"])
                 .WithHeader("Sender", _configuration["Stratis:Address"]);
 
-        public async Task<TicketContract.ReservationQueryResult> CheckReservation(TicketContract.Seat seat, Address address)
+        public async Task<MethodCallResponse> CheckReservationAsync(TicketContract.Seat seat, Address address)
         {
-            var seatIdentifierBytes = _serializer.Serialize(seat);
+            var seatIdentifier = _serializer.Serialize(seat);
+            var seatIdentifierBytes = BitConverter.ToString(seatIdentifier).Replace("-", string.Empty);
+            var base58Address = address.ToUint160().ToBase58Address(_network);
+
             var response = await BaseRequest
                 .WithHeader("Amount", 0)
                 .AppendPathSegments("method", "CheckReservation")
-                .PostJsonAsync(new { seatIdentifierBytes, address });
+                .PostJsonAsync(new { seatIdentifierBytes, address = base58Address });
 
             if (!response.IsSuccessStatusCode)
             {
                 return default;
             }
 
-            var reservationQueryResultString = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<TicketContract.ReservationQueryResult>(reservationQueryResultString);
+            var methodCallResponseString = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<MethodCallResponse>(methodCallResponseString);
         }
     }
 }
