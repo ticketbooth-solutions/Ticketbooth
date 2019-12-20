@@ -2,16 +2,11 @@
 
 @inject IJSRuntime _jsRuntime;
 
-<div id="container">
-    @Body
-</div>
+@Body
 
 @code {
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await _jsRuntime.InvokeVoidAsync("feather.replace");
-        }
+        await _jsRuntime.InvokeVoidAsync("feather.replace");
     }
 }

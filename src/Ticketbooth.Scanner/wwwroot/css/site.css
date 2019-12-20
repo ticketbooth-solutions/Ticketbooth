@@ -1,5 +1,5 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Courier New';
     margin: 0;
 }
 
@@ -9,7 +9,7 @@ app {
     flex-direction: column;
 }
 
-#container {
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -17,7 +17,74 @@ app {
     height: 100vh;
 }
 
-.feather-x, .feather-check {
+.button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+}
+
+.table-container::-webkit-scrollbar {
+    display: none;
+}
+
+.table-container {
+    display: block;
+    overflow-y: auto;
+    height: calc(100vh - 100px);
+    scrollbar-width: none;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    position: sticky;
+    top: 0;
+    background: #fff;
+}
+
+th {
+    text-align: left;
+    color: #5596e5;
+}
+
+tbody tr {
+    border-bottom: 1px solid #f2f2f2;
+    cursor: pointer;
+}
+
+tbody tr:hover {
+    background: #f2f2f2;
+}
+
+td, th {
+    padding: 1em;
+}
+
+table svg {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+}
+
+.button {
+    padding: .5em 2em;
+    border-radius: 1em;
+    background: #5596e5;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    user-select: none;
+}
+
+.button svg {
+    margin-right: .5em;
+}
+
+.ticket-details svg {
     width: 12rem;
     height: 12rem;
 }

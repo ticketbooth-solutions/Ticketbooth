@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ticketbooth.Contract", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ticketbooth.Scanner", "src\Ticketbooth.Scanner\Ticketbooth.Scanner.csproj", "{C50CED7C-6ED5-4DEE-AA9F-5E8BA7961812}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ticketbooth.Scanner.Tests", "test\Ticketbooth.Scanner.Tests\Ticketbooth.Scanner.Tests.csproj", "{42762260-3B92-4A78-BE32-802D4EBBA1FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ticketbooth.Scanner.Tests", "test\Ticketbooth.Scanner.Tests\Ticketbooth.Scanner.Tests.csproj", "{42762260-3B92-4A78-BE32-802D4EBBA1FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

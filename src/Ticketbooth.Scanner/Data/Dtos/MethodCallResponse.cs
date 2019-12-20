@@ -1,4 +1,4 @@
-﻿namespace Ticketbooth.Scanner.Data
+﻿namespace Ticketbooth.Scanner.Data.Dtos
 {
     public class MethodCallResponse
     {

@@ -4,7 +4,7 @@ using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Threading.Tasks;
-using Ticketbooth.Scanner.Data;
+using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Services;
 
 namespace Ticketbooth.Scanner.Tests.Services

@@ -1,1 +1,40 @@
 ﻿@page "/"
+
+@inject NavigationManager _navigationManager;
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Seat</th>
+                <th>Valid</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var scanResult in _ticketScans.Reverse())
+            {
+                <tr @onclick="() => ViewDetails(scanResult)">
+                    <td>@($"{scanResult.Seat.Number}{scanResult.Seat.Letter}")</td>
+                    <td><i data-feather="@(scanResult.OwnsTicket ? "check" : "x")"></i></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div class="button-container">
+    <a href="scan" class="button"><i data-feather="camera"></i>Scan</a>
+</div>
+
+@code {
+    private IList<TicketScanModel> _ticketScans;
+
+    protected override void OnInitialized()
+    {
+        _ticketScans = new List<TicketScanModel>();
+    }
+
+    private void ViewDetails(TicketScanModel scanResult)
+    {
+        _navigationManager.NavigateTo($"details/{scanResult.Id}");
+    }
+}

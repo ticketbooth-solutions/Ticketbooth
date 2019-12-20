@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Stratis.SmartContracts;
 using System.Threading.Tasks;
-using Ticketbooth.Scanner.Data;
+using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
 using Ticketbooth.Scanner.Services;

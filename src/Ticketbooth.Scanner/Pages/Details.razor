@@ -1,0 +1,27 @@
+﻿@page "/details/{id:int}"
+
+<div class="container ticket-details">
+    <i data-feather="@Icon" />
+    @if (Result?.OwnsTicket ?? false)
+    {
+        <span>Seat @($"{Result?.Seat.Number}{Result?.Seat.Letter}")</span>
+        <strong>@Result.Name</strong>
+    }
+    else
+    {
+        <strong>Invalid ticket</strong>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    public TicketScanModel Result { get; private set; }
+
+    public string Icon => (Result?.OwnsTicket ?? false) ? "check" : "x";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Result = new TicketScanModel(new SeatModel(5, 'D'));
+    }
+}

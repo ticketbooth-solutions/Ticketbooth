@@ -1,6 +1,6 @@
 ﻿using Stratis.SmartContracts;
 using System.Threading.Tasks;
-using Ticketbooth.Scanner.Data;
+using Ticketbooth.Scanner.Data.Dtos;
 using static TicketContract;
 
 namespace Ticketbooth.Scanner.Services
