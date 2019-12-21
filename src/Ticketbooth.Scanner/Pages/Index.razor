@@ -1,6 +1,9 @@
 ﻿@page "/"
 
+@implements IDisposable;
+
 @inject NavigationManager _navigationManager;
+@inject AppStateViewModel  _appState;
 
 <div class="table-container">
     <table>
@@ -11,7 +14,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var scanResult in _ticketScans.Reverse())
+            @foreach (var scanResult in _appState.TicketScans.Reverse())
             {
                 <tr @onclick="() => ViewDetails(scanResult)">
                     <td>@($"{scanResult.Seat.Number}{scanResult.Seat.Letter}")</td>
@@ -26,15 +29,23 @@
 </div>
 
 @code {
-    private IList<TicketScanModel> _ticketScans;
-
     protected override void OnInitialized()
     {
-        _ticketScans = new List<TicketScanModel>();
+        _appState.OnDataChanged += OnDataChanged;
     }
 
     private void ViewDetails(TicketScanModel scanResult)
     {
-        _navigationManager.NavigateTo($"details/{scanResult.Id}");
+        _navigationManager.NavigateTo($"details/{scanResult.TransactionHash}");
+    }
+
+    private void OnDataChanged(object sender, EventArgs eventArgs)
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _appState.OnDataChanged -= OnDataChanged;
     }
 }

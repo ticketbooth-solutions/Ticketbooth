@@ -8,8 +8,10 @@ namespace Ticketbooth.Scanner.Eventing
 {
     public interface ITicketChecker
     {
-        EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult { get; set; }
+        event EventHandler<TicketCheckEventArgs> OnCheckTicket;
 
-        Task PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken);
+        event EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult;
+
+        Task<bool> PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken);
     }
 }

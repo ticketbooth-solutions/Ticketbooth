@@ -4,14 +4,14 @@ namespace Ticketbooth.Scanner.Eventing.Args
 {
     public class TicketCheckResultEventArgs : EventArgs
     {
-        public TicketCheckResultEventArgs(TicketContract.Seat seat, bool ownsTicket, string name)
+        public TicketCheckResultEventArgs(string transactionHash, bool ownsTicket, string name)
         {
-            Seat = seat;
+            TransactionHash = transactionHash;
             OwnsTicket = ownsTicket;
             Name = name;
         }
 
-        public TicketContract.Seat Seat { get; }
+        public string TransactionHash { get; }
 
         public bool OwnsTicket { get; }
 

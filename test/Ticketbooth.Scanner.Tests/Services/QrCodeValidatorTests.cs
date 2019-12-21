@@ -96,7 +96,7 @@ namespace Ticketbooth.Scanner.Tests.Services
         }
 
         [Test]
-        public async Task Validate_DataIsValid_RedirectsBack()
+        public async Task Validate_DataIsValidCallFailed_RedirectsBack()
         {
             // Arrange
             var tickets = new DigitalTicket[]
@@ -110,6 +110,37 @@ namespace Ticketbooth.Scanner.Tests.Services
 
             var redirects = new List<string>();
             _navigationManager.NavigationRaised += (sender, uri) => redirects.Add(uri);
+            _ticketChecker
+                .Setup(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(false));
+
+            // Act
+            await _qrCodeValidator.Validate(JsonConvert.SerializeObject(tickets));
+
+            // Assert
+            Assert.That(redirects, Has.Count.Zero);
+
+            _navigationManager.NavigationRaised -= (sender, uri) => redirects.Add(uri);
+        }
+
+        [Test]
+        public async Task Validate_DataIsValidCallSuccess_RedirectsBack()
+        {
+            // Arrange
+            var tickets = new DigitalTicket[]
+            {
+                new DigitalTicket
+                {
+                    Seat = new TicketContract.Seat { Number = new Random().Next(1, 6), Letter = 'B' },
+                    Address = new Address(556352392, 393654450, 1497506724, 2697943157, 1670988474)
+                }
+            };
+
+            var redirects = new List<string>();
+            _navigationManager.NavigationRaised += (sender, uri) => redirects.Add(uri);
+            _ticketChecker
+                .Setup(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(true));
 
             // Act
             await _qrCodeValidator.Validate(JsonConvert.SerializeObject(tickets));

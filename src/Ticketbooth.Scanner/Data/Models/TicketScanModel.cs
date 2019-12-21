@@ -9,13 +9,14 @@ namespace Ticketbooth.Scanner.Data.Models
         {
         }
 
-        public TicketScanModel(SeatModel seat)
+        public TicketScanModel(string transactionHash, SeatModel seat)
         {
+            TransactionHash = transactionHash;
             Seat = seat;
         }
 
         [Key]
-        public int Id { get; set; }
+        public string TransactionHash { get; set; }
 
         public SeatModel Seat { get; set; }
 

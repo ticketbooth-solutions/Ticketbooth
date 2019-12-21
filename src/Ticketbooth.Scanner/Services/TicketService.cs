@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.SmartContracts;
-using Stratis.SmartContracts.CLR;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -40,12 +39,11 @@ namespace Ticketbooth.Scanner.Services
         {
             var seatIdentifier = _serializer.Serialize(seat);
             var seatIdentifierBytes = BitConverter.ToString(seatIdentifier).Replace("-", string.Empty);
-            var base58Address = address.ToUint160().ToBase58Address(_network);
 
             var response = await BaseRequest
                 .WithHeader("Amount", 0)
                 .AppendPathSegments("method", "CheckReservation")
-                .PostJsonAsync(new { seatIdentifierBytes, address = base58Address });
+                .PostJsonAsync(new { seatIdentifierBytes, address });
 
             if (!response.IsSuccessStatusCode)
             {

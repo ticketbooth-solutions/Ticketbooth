@@ -37,20 +37,19 @@ namespace Ticketbooth.Scanner.Tests.Eventing
 
             var methodCallResponse = null as MethodCallResponse;
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
-            _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Name, Is.Null, nameof(TicketCheckResultEventArgs.Name));
-                Assert.That(e.OwnsTicket, Is.False, nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
+            var ticketCheckMade = await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Never);
-            Assert.That(eventInvoked, Is.True);
+            Assert.That(eventInvoked, Is.False, "Event invoked");
+            Assert.That(ticketCheckMade, Is.False, "Ticket check made");
         }
 
         [Test]
@@ -66,20 +65,19 @@ namespace Ticketbooth.Scanner.Tests.Eventing
 
             var methodCallResponse = new MethodCallResponse { Success = false };
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
-            _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Name, Is.Null, nameof(TicketCheckResultEventArgs.Name));
-                Assert.That(e.OwnsTicket, Is.False, nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
+            var ticketCheckMade = await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Never);
-            Assert.That(eventInvoked, Is.True);
+            Assert.That(eventInvoked, Is.False, "Event invoked");
+            Assert.That(ticketCheckMade, Is.False, "Ticket check made");
         }
 
         [Test]
@@ -100,20 +98,19 @@ namespace Ticketbooth.Scanner.Tests.Eventing
             };
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _smartContractService.Setup(callTo => callTo.FetchReceiptAsync<ReservationQueryResult>("fx0je9sjeehtux")).Returns(Task.FromResult(receipt));
-            _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Name, Is.Null, nameof(TicketCheckResultEventArgs.Name));
-                Assert.That(e.OwnsTicket, Is.False, nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
+            var ticketCheckMade = await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Once);
-            Assert.That(eventInvoked, Is.True);
+            Assert.That(eventInvoked, Is.True, "Event invoked");
+            Assert.That(ticketCheckMade, Is.True, "Ticket check made");
         }
 
         [Test]
@@ -139,20 +136,19 @@ namespace Ticketbooth.Scanner.Tests.Eventing
             };
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _smartContractService.Setup(callTo => callTo.FetchReceiptAsync<ReservationQueryResult>("fx0je9sjeehtux")).Returns(Task.FromResult(receipt));
-            _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Name, Is.EqualTo(reservationQueryResult.CustomerIdentifier), nameof(TicketCheckResultEventArgs.Name));
-                Assert.That(e.OwnsTicket, Is.EqualTo(reservationQueryResult.OwnsTicket), nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
+            var ticketCheckMade = await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Once);
-            Assert.That(eventInvoked, Is.True);
+            Assert.That(eventInvoked, Is.True, "Event invoked");
+            Assert.That(ticketCheckMade, Is.True, "Ticket check made");
         }
     }
 }

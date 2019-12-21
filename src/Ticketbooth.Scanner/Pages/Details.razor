@@ -1,4 +1,4 @@
-﻿@page "/details/{id:int}"
+﻿@page "/details/{hash}"
 
 <div class="container ticket-details">
     <i data-feather="@Icon" />
@@ -14,7 +14,7 @@
 </div>
 
 @code {
-    [Parameter] public int Id { get; set; }
+    [Parameter] public string Hash { get; set; }
 
     public TicketScanModel Result { get; private set; }
 
@@ -22,6 +22,6 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        Result = new TicketScanModel(new SeatModel(5, 'D'));
+        Result = new TicketScanModel(Hash, new SeatModel(5, 'D'));
     }
 }

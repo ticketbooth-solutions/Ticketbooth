@@ -9,6 +9,9 @@ namespace Ticketbooth.Scanner.Eventing
 {
     public class TicketChecker : ITicketChecker
     {
+        public event EventHandler<TicketCheckEventArgs> OnCheckTicket;
+        public event EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult;
+
         private readonly ISmartContractService _smartContractService;
         private readonly ITicketService _ticketService;
 
@@ -18,29 +21,35 @@ namespace Ticketbooth.Scanner.Eventing
             _ticketService = ticketService;
         }
 
-        public EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult { get; set; }
-
-        public async Task PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken)
+        public async Task<bool> PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken)
         {
             var checkReservationResponse = await _ticketService.CheckReservationAsync(ticket.Seat, ticket.Address);
             if (checkReservationResponse is null || !checkReservationResponse.Success)
             {
-                OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(ticket.Seat, false, null));
-                return;
+                return false;
             }
 
+            OnCheckTicket?.Invoke(this, new TicketCheckEventArgs(checkReservationResponse.TransactionId, ticket.Seat));
+            PollResult(checkReservationResponse.TransactionId, cancellationToken);
+            return true;
+        }
+
+        private async Task PollResult(string transactionHash, CancellationToken cancellationToken)
+        {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var reservationResultReceipt = await _smartContractService.FetchReceiptAsync<TicketContract.ReservationQueryResult>(checkReservationResponse.TransactionId);
+                var reservationResultReceipt = await _smartContractService.FetchReceiptAsync<TicketContract.ReservationQueryResult>(transactionHash);
                 if (!(reservationResultReceipt is null))
                 {
                     var reservationResult = reservationResultReceipt.ReturnValue;
-                    OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(ticket.Seat, reservationResult.OwnsTicket, reservationResult.CustomerIdentifier));
+                    OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(transactionHash, reservationResult.OwnsTicket, reservationResult.CustomerIdentifier));
                     return;
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
+
+            OnCheckTicketResult?.Invoke(this, null);
         }
     }
 }

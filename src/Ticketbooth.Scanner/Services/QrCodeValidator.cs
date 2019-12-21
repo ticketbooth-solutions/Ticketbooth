@@ -37,20 +37,28 @@ namespace Ticketbooth.Scanner.Services
                     return false;
                 }
 
-
-                Task.WaitAll(tickets.Select(ticket =>
+                var success = await CheckTickets(tickets);
+                if (success)
                 {
-                    var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                    return _ticketChecker.PerformTicketCheckAsync(ticket, cancellationTokenSource.Token);
-                }).ToArray());
+                    _navigationManager.NavigateTo("../");
+                }
+
+                return success;
             }
             catch (JsonReaderException)
             {
                 return false;
             }
+        }
 
-            _navigationManager.NavigateTo("../");
-            return true;
+        private async Task<bool> CheckTickets(params DigitalTicket[] tickets)
+        {
+            var ticketChecks = await Task.WhenAll(tickets.Select(ticket =>
+            {
+                var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                return _ticketChecker.PerformTicketCheckAsync(ticket, cancellationTokenSource.Token);
+            }).ToArray());
+            return ticketChecks.Any(success => success);
         }
     }
 }
