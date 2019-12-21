@@ -22,11 +22,11 @@ namespace Ticketbooth.Scanner.Services
         }
 
         [JSInvokable]
-        public async Task Validate(string qrCodeResult)
+        public async Task<bool> Validate(string qrCodeResult)
         {
             if (string.IsNullOrWhiteSpace(qrCodeResult))
             {
-                return;
+                return false;
             }
 
             try
@@ -34,8 +34,9 @@ namespace Ticketbooth.Scanner.Services
                 var tickets = JsonConvert.DeserializeObject<DigitalTicket[]>(qrCodeResult);
                 if (tickets is null || !tickets.Any())
                 {
-                    return;
+                    return false;
                 }
+
 
                 Task.WaitAll(tickets.Select(ticket =>
                 {
@@ -45,10 +46,11 @@ namespace Ticketbooth.Scanner.Services
             }
             catch (JsonReaderException)
             {
-                return;
+                return false;
             }
 
             _navigationManager.NavigateTo("../");
+            return true;
         }
     }
 }

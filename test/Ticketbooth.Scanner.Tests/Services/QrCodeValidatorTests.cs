@@ -1,11 +1,13 @@
 ﻿using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Converters;
 using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Services;
@@ -22,6 +24,11 @@ namespace Ticketbooth.Scanner.Tests.Services
         [SetUp]
         public void SetUp()
         {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = new List<JsonConverter>() { new AddressConverter(CirrusNetwork.NetworksSelector.Mainnet.Invoke()) }
+            };
+
             _ticketChecker = new Mock<ITicketChecker>();
             _navigationManager = new FakeNavigationManager();
             _qrCodeValidator = new QrCodeValidator(_navigationManager, _ticketChecker.Object);
@@ -97,7 +104,7 @@ namespace Ticketbooth.Scanner.Tests.Services
                 new DigitalTicket
                 {
                     Seat = new TicketContract.Seat { Number = new Random().Next(1, 6), Letter = 'B' },
-                    Address = new Address(50003, 39298, 382494, 323738, 432)
+                    Address = new Address(556352392, 393654450, 1497506724, 2697943157, 1670988474)
                 }
             };
 
@@ -109,10 +116,10 @@ namespace Ticketbooth.Scanner.Tests.Services
 
             // Assert
             Assert.Multiple(() =>
-            {
-                Assert.That(redirects, Has.Count.EqualTo(1));
-                Assert.That(redirects, Has.One.EqualTo("../"));
-            });
+                {
+                    Assert.That(redirects, Has.Count.EqualTo(1));
+                    Assert.That(redirects, Has.One.EqualTo("../"));
+                });
 
             _navigationManager.NavigationRaised -= (sender, uri) => redirects.Add(uri);
         }
