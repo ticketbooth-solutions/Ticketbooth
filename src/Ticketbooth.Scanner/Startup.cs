@@ -31,6 +31,7 @@ namespace Ticketbooth.Scanner
             services.AddScoped<ISmartContractService, SmartContractService>();
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<ITicketChecker, TicketChecker>();
+            services.AddTransient<QrCodeValidator>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

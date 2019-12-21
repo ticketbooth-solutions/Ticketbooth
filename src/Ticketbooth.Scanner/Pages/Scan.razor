@@ -1,9 +1,13 @@
 ﻿@page "/scan"
 
-<div class="container">
+@inject IJSRuntime _jsRuntime;
+@inject QrCodeValidator _qrCodeValidator;
 
-</div>
+<video id="preview"></video>
 
 @code {
-
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await _jsRuntime.InvokeVoidAsync("beginScan", DotNetObjectReference.Create(_qrCodeValidator));
+    }
 }
