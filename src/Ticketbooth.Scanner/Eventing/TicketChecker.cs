@@ -1,7 +1,7 @@
-﻿using Stratis.SmartContracts;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Eventing.Args;
 using Ticketbooth.Scanner.Services;
 
@@ -20,12 +20,12 @@ namespace Ticketbooth.Scanner.Eventing
 
         public EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult { get; set; }
 
-        public async Task PerformTicketCheckAsync(TicketContract.Seat seat, Address address, CancellationToken cancellationToken)
+        public async Task PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken)
         {
-            var checkReservationResponse = await _ticketService.CheckReservationAsync(seat, address);
+            var checkReservationResponse = await _ticketService.CheckReservationAsync(ticket.Seat, ticket.Address);
             if (checkReservationResponse is null || !checkReservationResponse.Success)
             {
-                OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(seat, false, null));
+                OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(ticket.Seat, false, null));
                 return;
             }
 
@@ -35,7 +35,7 @@ namespace Ticketbooth.Scanner.Eventing
                 if (!(reservationResultReceipt is null))
                 {
                     var reservationResult = reservationResultReceipt.ReturnValue;
-                    OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(seat, reservationResult.OwnsTicket, reservationResult.CustomerIdentifier));
+                    OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(ticket.Seat, reservationResult.OwnsTicket, reservationResult.CustomerIdentifier));
                     return;
                 }
 

@@ -29,21 +29,24 @@ namespace Ticketbooth.Scanner.Tests.Eventing
         {
             // Arrange
             var eventInvoked = false;
-            var seat = new Seat { Number = 2, Letter = 'C' };
-            var address = new Address(45839, 32483, 42348, 42383, 90123);
+            var ticket = new DigitalTicket
+            {
+                Seat = new Seat { Number = 2, Letter = 'C' },
+                Address = new Address(45839, 32483, 42348, 42383, 90123)
+            };
 
             var methodCallResponse = null as MethodCallResponse;
-            _ticketService.Setup(callTo => callTo.CheckReservationAsync(seat, address)).Returns(Task.FromResult(methodCallResponse));
+            _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Name, Is.Null, nameof(TicketCheckResultEventArgs.Name));
                 Assert.That(e.OwnsTicket, Is.False, nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(seat, address, default);
+            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Never);
@@ -55,21 +58,24 @@ namespace Ticketbooth.Scanner.Tests.Eventing
         {
             // Arrange
             var eventInvoked = false;
-            var seat = new Seat { Number = 2, Letter = 'C' };
-            var address = new Address(45839, 32483, 42348, 42383, 90123);
+            var ticket = new DigitalTicket
+            {
+                Seat = new Seat { Number = 2, Letter = 'C' },
+                Address = new Address(45839, 32483, 42348, 42383, 90123)
+            };
 
             var methodCallResponse = new MethodCallResponse { Success = false };
-            _ticketService.Setup(callTo => callTo.CheckReservationAsync(seat, address)).Returns(Task.FromResult(methodCallResponse));
+            _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Name, Is.Null, nameof(TicketCheckResultEventArgs.Name));
                 Assert.That(e.OwnsTicket, Is.False, nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(seat, address, default);
+            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Never);
@@ -81,26 +87,29 @@ namespace Ticketbooth.Scanner.Tests.Eventing
         {
             // Arrange
             var eventInvoked = false;
-            var seat = new Seat { Number = 2, Letter = 'C' };
-            var address = new Address(45839, 32483, 42348, 42383, 90123);
+            var ticket = new DigitalTicket
+            {
+                Seat = new Seat { Number = 2, Letter = 'C' },
+                Address = new Address(45839, 32483, 42348, 42383, 90123)
+            };
 
             var methodCallResponse = new MethodCallResponse { Success = true, TransactionId = "fx0je9sjeehtux" };
             var receipt = new Receipt<ReservationQueryResult>
             {
                 ReturnValue = default
             };
-            _ticketService.Setup(callTo => callTo.CheckReservationAsync(seat, address)).Returns(Task.FromResult(methodCallResponse));
+            _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _smartContractService.Setup(callTo => callTo.FetchReceiptAsync<ReservationQueryResult>("fx0je9sjeehtux")).Returns(Task.FromResult(receipt));
             _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Name, Is.Null, nameof(TicketCheckResultEventArgs.Name));
                 Assert.That(e.OwnsTicket, Is.False, nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(seat, address, default);
+            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Once);
@@ -112,8 +121,11 @@ namespace Ticketbooth.Scanner.Tests.Eventing
         {
             // Arrange
             var eventInvoked = false;
-            var seat = new Seat { Number = 2, Letter = 'C' };
-            var address = new Address(45839, 32483, 42348, 42383, 90123);
+            var ticket = new DigitalTicket
+            {
+                Seat = new Seat { Number = 2, Letter = 'C' },
+                Address = new Address(45839, 32483, 42348, 42383, 90123)
+            };
 
             var methodCallResponse = new MethodCallResponse { Success = true, TransactionId = "fx0je9sjeehtux" };
             var reservationQueryResult = new ReservationQueryResult
@@ -125,18 +137,18 @@ namespace Ticketbooth.Scanner.Tests.Eventing
             {
                 ReturnValue = reservationQueryResult
             };
-            _ticketService.Setup(callTo => callTo.CheckReservationAsync(seat, address)).Returns(Task.FromResult(methodCallResponse));
+            _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _smartContractService.Setup(callTo => callTo.FetchReceiptAsync<ReservationQueryResult>("fx0je9sjeehtux")).Returns(Task.FromResult(receipt));
             _ticketChecker.OnCheckTicketResult += (object sender, TicketCheckResultEventArgs e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Name, Is.EqualTo(reservationQueryResult.CustomerIdentifier), nameof(TicketCheckResultEventArgs.Name));
                 Assert.That(e.OwnsTicket, Is.EqualTo(reservationQueryResult.OwnsTicket), nameof(TicketCheckResultEventArgs.OwnsTicket));
-                Assert.That(e.Seat, Is.EqualTo(seat), nameof(TicketCheckResultEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckResultEventArgs.Seat));
             };
 
             // Act
-            await _ticketChecker.PerformTicketCheckAsync(seat, address, default);
+            await _ticketChecker.PerformTicketCheckAsync(ticket, default);
 
             // Assert
             _smartContractService.Verify(callTo => callTo.FetchReceiptAsync<object>(It.IsAny<string>()), Times.Once);

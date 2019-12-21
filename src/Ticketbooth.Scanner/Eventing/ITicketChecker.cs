@@ -1,7 +1,7 @@
-﻿using Stratis.SmartContracts;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Eventing.Args;
 
 namespace Ticketbooth.Scanner.Eventing
@@ -10,6 +10,6 @@ namespace Ticketbooth.Scanner.Eventing
     {
         EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult { get; set; }
 
-        Task PerformTicketCheckAsync(TicketContract.Seat seat, Address address, CancellationToken cancellationToken);
+        Task PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken);
     }
 }
