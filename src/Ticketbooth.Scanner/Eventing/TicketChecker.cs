@@ -42,14 +42,16 @@ namespace Ticketbooth.Scanner.Eventing
                 if (!(reservationResultReceipt is null))
                 {
                     var reservationResult = reservationResultReceipt.ReturnValue;
-                    OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(transactionHash, reservationResult.OwnsTicket, reservationResult.CustomerIdentifier));
+                    var ownsTicket = reservationResult.OwnsTicket;
+                    var name = reservationResult.CustomerIdentifier ?? string.Empty;
+                    OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(transactionHash, ownsTicket, name));
                     return;
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
 
-            OnCheckTicketResult?.Invoke(this, null);
+            OnCheckTicketResult?.Invoke(this, new TicketCheckResultEventArgs(transactionHash, false, null, true));
         }
     }
 }

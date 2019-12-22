@@ -13,6 +13,7 @@ namespace Ticketbooth.Scanner.Data.Models
         {
             TransactionHash = transactionHash;
             Seat = seat;
+            Status = TicketScanStatus.Started;
         }
 
         [Key]
@@ -20,11 +21,11 @@ namespace Ticketbooth.Scanner.Data.Models
 
         public SeatModel Seat { get; set; }
 
+        public TicketScanStatus Status { get; set; }
+
         public bool OwnsTicket { get; set; }
 
         public string Name { get; set; }
-
-        public bool HasResult => !(Name is null);
 
         public void SetScanResult(bool ownsTicket, string name)
         {
@@ -35,6 +36,12 @@ namespace Ticketbooth.Scanner.Data.Models
 
             OwnsTicket = ownsTicket;
             Name = name;
+            Status = TicketScanStatus.Completed;
+        }
+
+        public void SetFaulted()
+        {
+            Status = TicketScanStatus.Faulted;
         }
     }
 }
