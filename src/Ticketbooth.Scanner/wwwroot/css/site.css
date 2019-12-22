@@ -41,6 +41,10 @@ table {
 }
 
 thead {
+    z-index: 1; /* firefox bug fix */
+}
+
+thead, th { /* chrome bug fix */
     position: sticky;
     top: 0;
     background: #fff;
@@ -54,10 +58,21 @@ th {
 tbody tr {
     border-bottom: 1px solid #f2f2f2;
     cursor: pointer;
+    position: relative;
 }
 
-tbody tr:hover {
+tbody tr:hover:not(.disabled) {
     background: #f2f2f2;
+}
+
+tr.disabled::after {
+    position: absolute;
+    content: '';
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    cursor: auto;
 }
 
 td, th {
@@ -97,7 +112,24 @@ table svg {
     color: #00FF00;
 }
 
+.feather-alert-triangle {
+    color: #ff6a00;
+}
+
+.feather-loader {
+    animation: rotation 3s linear infinite;
+}
+
 #preview {
     width: 100vw;
     height: 100vh;
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }

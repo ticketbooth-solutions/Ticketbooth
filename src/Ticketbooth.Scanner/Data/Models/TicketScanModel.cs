@@ -14,6 +14,7 @@ namespace Ticketbooth.Scanner.Data.Models
             TransactionHash = transactionHash;
             Seat = seat;
             Status = TicketScanStatus.Started;
+            Time = DateTime.Now;
         }
 
         [Key]
@@ -26,6 +27,8 @@ namespace Ticketbooth.Scanner.Data.Models
         public bool OwnsTicket { get; set; }
 
         public string Name { get; set; }
+
+        public DateTime Time { get; set; }
 
         public void SetScanResult(bool ownsTicket, string name)
         {

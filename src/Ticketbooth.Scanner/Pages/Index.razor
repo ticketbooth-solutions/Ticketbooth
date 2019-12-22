@@ -9,6 +9,7 @@
     <table>
         <thead>
             <tr>
+                <th>Time</th>
                 <th>Seat</th>
                 <th>Valid</th>
             </tr>
@@ -16,9 +17,14 @@
         <tbody>
             @foreach (var scanResult in _appState.TicketScans.Reverse())
             {
-                <tr @onclick="() => ViewDetails(scanResult)">
+                <tr @onclick="() => ViewDetails(scanResult)" class="@(scanResult.Status == TicketScanStatus.Started ? "disabled" : string.Empty)">
+                    <td>@scanResult.Time.ToLongTimeString()</td>
                     <td>@($"{scanResult.Seat.Number}{scanResult.Seat.Letter}")</td>
-                    <td><i data-feather="@(scanResult.OwnsTicket ? "check" : "x")"></i></td>
+                    <td>
+                        <i data-feather="@(scanResult.Status == TicketScanStatus.Started ? "loader"
+                                           : scanResult.Status == TicketScanStatus.Faulted ? "alert-triangle"
+                                           : scanResult.OwnsTicket ? "check" : "x")"></i>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -36,6 +42,11 @@
 
     private void ViewDetails(TicketScanModel scanResult)
     {
+        if (scanResult.Status == TicketScanStatus.Started)
+        {
+            return;
+        }
+
         _navigationManager.NavigateTo($"details/{scanResult.TransactionHash}");
     }
 
