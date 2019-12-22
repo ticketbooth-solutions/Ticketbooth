@@ -1,49 +1,37 @@
 ﻿@page "/details/{hash}"
 
+@implements IDisposable
+
+@inject DetailsViewModel _details
+
 <div class="container ticket-details">
-    <i data-feather="@Icon" />
-    <strong>@Message</strong>
-    <span>@MessageDetail</span>
+    <i data-feather="@_details.Icon" />
+    <strong>@_details.Message</strong>
+    <span>@_details.MessageDetail</span>
 </div>
 
 @code {
-    [Parameter] public string Hash { get; set; }
+    [Parameter]
+    public string Hash { get; set; }
 
-    public TicketScanModel Result { get; private set; }
-
-    public string Icon =>
-        Result is null ? "frown"
-        : Result.Status == TicketScanStatus.Started ? "loader"
-        : Result.Status == TicketScanStatus.Faulted ? "alert-triangle"
-        : Result.OwnsTicket ? "check" : "x";
-
-    public string Message =>
-        Result is null ? "How did I get here?"
-        : Result.Status == TicketScanStatus.Started ? "Processing"
-        : Result.Status == TicketScanStatus.Faulted ? "Something went wrong"
-        : Result.OwnsTicket ? $"Seat {Result?.Seat.Number}{Result?.Seat.Letter}" : "Invalid ticket";
-
-    public string MessageDetail { get; private set; }
-
-    protected override async Task OnParametersSetAsync()
+    protected override void OnInitialized()
     {
-        if (Result is null)
-        {
-            return;
-        }
-
-        SetMessageDetail();
+        _details.OnDataChanged += OnDataChanged;
     }
 
-    private void SetMessageDetail()
+    protected override void OnParametersSet()
     {
-        if (Result.Status == TicketScanStatus.Faulted)
-        {
-            MessageDetail = "Ticket scan timed out";
-        }
-        else if (Result.Status == TicketScanStatus.Completed && Result.OwnsTicket)
-        {
-            MessageDetail = Result.Name;
-        }
+        _details.RetrieveTicketScan(Hash);
+    }
+
+    private void OnDataChanged(object sender, EventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _details.OnDataChanged -= OnDataChanged;
+        _details.Dispose();
     }
 }

@@ -36,6 +36,7 @@ namespace Ticketbooth.Scanner
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<ITicketChecker, TicketChecker>();
             services.AddTransient<QrCodeValidator>();
+            services.AddTransient<DetailsViewModel>();
             services.AddScoped<AppStateViewModel>();
 
             services.AddRazorPages().AddNewtonsoftJson(options =>
