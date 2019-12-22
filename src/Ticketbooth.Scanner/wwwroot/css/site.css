@@ -104,6 +104,11 @@ table svg {
     height: 12rem;
 }
 
+.ticket-details > * {
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+
 .feather-x {
     color: #FF0000;
 }
