@@ -3,11 +3,62 @@
 @inject IJSRuntime _jsRuntime;
 @inject QrCodeValidator _qrCodeValidator;
 
-<video id="preview"></video>
+<video id="preview" hidden="@(!_streaming)"></video>
+
+@if (!_streaming)
+{
+    <div class="container">
+        <i data-feather="camera-off"></i>
+        <strong>@_errorMessage</strong>
+    </div>
+}
 
 @code {
+    private bool _streaming;
+    private string _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        _errorMessage = "Allow camera access to scan tickets";
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await _jsRuntime.InvokeVoidAsync("beginScan", DotNetObjectReference.Create(_qrCodeValidator));
+        if (firstRender)
+        {
+            await _jsRuntime.InvokeVoidAsync("beginScan", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public async Task<bool> Validate(string qrCodeResult)
+    {
+        return await _qrCodeValidator.Validate(qrCodeResult);
+    }
+
+    [JSInvokable]
+    public Task OnStartScanning()
+    {
+        _streaming = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnCameraNotFound()
+    {
+        _streaming = false;
+        _errorMessage = "No cameras found";
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnOpenCameraError()
+    {
+        _streaming = false;
+        _errorMessage = "Allow camera access to scan tickets";
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 }

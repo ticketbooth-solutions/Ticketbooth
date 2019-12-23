@@ -15,6 +15,7 @@ app {
     align-items: center;
     justify-content: center;
     height: 100vh;
+    padding: 0 2em;
 }
 
 .button-container {
@@ -99,14 +100,15 @@ table svg {
     margin-right: .5em;
 }
 
-.ticket-details svg {
+.container svg {
     width: 12rem;
     height: 12rem;
 }
 
-.ticket-details > * {
+.container > * {
     margin-top: .5em;
     margin-bottom: .5em;
+    text-align: center;
 }
 
 .feather-x {

@@ -1,20 +1,43 @@
-﻿function beginScan(qrCodeValidator) {
-    let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
-    scanner.addListener('scan', function (content) {
-        console.log(content);
-        qrCodeValidator.invokeMethodAsync('Validate', content).then(valid => {
-            if (valid) {
-                scanner.stop();
-            }
-        });
-    });
+﻿let scanning = false;
+
+function beginScan(dotnetScanner) {
+    if (scanning) {
+        StopScanning();
+    }
+
+    let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
+
+    window.addEventListener('popstate', StopScanning);
+
     Instascan.Camera.getCameras().then(function (cameras) {
+
         if (cameras.length > 0) {
             scanner.start(cameras[0]);
+            scanner.addListener('scan', OnScan);
+            dotnetScanner.invokeMethodAsync('OnStartScanning');
+            scanning = true;
         } else {
+            dotnetScanner.invokeMethodAsync('OnCameraNotFound');
             console.error('No cameras found.');
         }
     }).catch(function (e) {
+        dotnetScanner.invokeMethodAsync('OnOpenCameraError');
         console.error(e);
     });
+
+    function OnScan(content) {
+        console.log(content);
+        dotnetScanner.invokeMethodAsync('Validate', content).then(valid => {
+            if (valid) {
+                StopScanning();
+                window.removeEventListener('popstate', StopScanning);
+            }
+        });
+    }
+
+    function StopScanning() {
+        scanning = false;
+        scanner.removeListener('scan', OnScan);
+        scanner.stop();
+    }
 }

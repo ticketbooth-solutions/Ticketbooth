@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
@@ -21,7 +20,6 @@ namespace Ticketbooth.Scanner.Services
             _ticketChecker = ticketChecker;
         }
 
-        [JSInvokable]
         public async Task<bool> Validate(string qrCodeResult)
         {
             if (string.IsNullOrWhiteSpace(qrCodeResult))

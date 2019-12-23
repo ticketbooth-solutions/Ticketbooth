@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace Ticketbooth.Scanner.Data.Models
 {
@@ -17,7 +16,6 @@ namespace Ticketbooth.Scanner.Data.Models
             Time = DateTime.Now;
         }
 
-        [Key]
         public string TransactionHash { get; set; }
 
         public SeatModel Seat { get; set; }
