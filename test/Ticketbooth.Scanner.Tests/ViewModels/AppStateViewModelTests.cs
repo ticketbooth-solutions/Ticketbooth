@@ -2,8 +2,8 @@
 using NUnit.Framework;
 using System.Linq;
 using Ticketbooth.Scanner.Data.Models;
-using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
+using Ticketbooth.Scanner.Services.Application;
 using Ticketbooth.Scanner.ViewModels;
 using static TicketContract;
 
@@ -64,14 +64,14 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         }
 
         [Test]
-        public void AddTicketScan_OnCheckTicket_OnDataChangedRaised()
+        public void AddTicketScan_OnCheckTicket_OnPropertyChangedRaised()
         {
             // Arrange
             var eventRaised = false;
             var transactionHash = "84jfw89j";
             var seat = new Seat { Number = 5, Letter = 'B' };
             var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
-            _appStateViewModel.OnDataChanged += (s, e) => { eventRaised = true; };
+            _appStateViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
 
             // Act
             _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
@@ -79,7 +79,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             // Assert
             Assert.That(eventRaised, Is.True);
 
-            _appStateViewModel.OnDataChanged -= (s, e) => { eventRaised = true; };
+            _appStateViewModel.OnPropertyChanged -= (s, e) => { eventRaised = true; };
         }
 
         [Test]
@@ -166,14 +166,14 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         }
 
         [Test]
-        public void SetTicketScanResult_OnCheckTicketResultTxDoesNotExist_OnDataChangedNotRaised()
+        public void SetTicketScanResult_OnCheckTicketResultTxDoesNotExist_OnPropertyChangedNotRaised()
         {
             // Arrange
             var eventRaised = false;
             var transactionHash = "84jfw89j";
             var ticketCheckResultEventArgs = new TicketCheckResultEventArgs(transactionHash, true, "Benjamin Swift");
 
-            _appStateViewModel.OnDataChanged += (s, e) => { eventRaised = true; };
+            _appStateViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
 
             // Act
             _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, ticketCheckResultEventArgs);
@@ -181,11 +181,11 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             // Assert
             Assert.That(eventRaised, Is.False);
 
-            _appStateViewModel.OnDataChanged -= (s, e) => { eventRaised = true; };
+            _appStateViewModel.OnPropertyChanged -= (s, e) => { eventRaised = true; };
         }
 
         [Test]
-        public void SetTicketScanResult_OnCheckTicketResultTxExists_OnDataChangedRaised()
+        public void SetTicketScanResult_OnCheckTicketResultTxExists_OnPropertyChangedRaised()
         {
             // Arrange
             var eventRaised = false;
@@ -195,7 +195,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             var ticketCheckResultEventArgs = new TicketCheckResultEventArgs(transactionHash, true, "Benjamin Swift");
             _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
 
-            _appStateViewModel.OnDataChanged += (s, e) => { eventRaised = true; };
+            _appStateViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
 
             // Act
             _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, ticketCheckResultEventArgs);
@@ -203,7 +203,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             // Assert
             Assert.That(eventRaised, Is.True);
 
-            _appStateViewModel.OnDataChanged -= (s, e) => { eventRaised = true; };
+            _appStateViewModel.OnPropertyChanged -= (s, e) => { eventRaised = true; };
         }
     }
 }

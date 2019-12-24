@@ -2,22 +2,43 @@
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
+using Ticketbooth.Scanner.Services.Application;
 
 namespace Ticketbooth.Scanner.ViewModels
 {
-    public class DetailsViewModel : IDisposable
+    public class DetailsViewModel : INotifyPropertyChanged, IDisposable
     {
-        public event EventHandler OnDataChanged;
+        public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
 
         private readonly ITicketChecker _ticketChecker;
         private string _hash;
+        private TicketScanModel _result;
+        private string _messageDetail;
 
         public DetailsViewModel(ITicketChecker ticketChecker)
         {
             _ticketChecker = ticketChecker;
         }
 
-        public TicketScanModel Result { get; private set; }
+        public TicketScanModel Result
+        {
+            get { return _result; }
+            private set
+            {
+                _result = value;
+                OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Result)));
+            }
+        }
+
+        public string MessageDetail
+        {
+            get { return _messageDetail; }
+            private set
+            {
+                _messageDetail = value;
+                OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MessageDetail)));
+            }
+        }
 
         public string Icon =>
             Result is null ? "frown"
@@ -30,8 +51,6 @@ namespace Ticketbooth.Scanner.ViewModels
             : Result.Status == TicketScanStatus.Started ? "Processing"
             : Result.Status == TicketScanStatus.Faulted ? "Something went wrong"
             : Result.OwnsTicket ? $"Seat {Result?.Seat.Number}{Result?.Seat.Letter}" : "Invalid ticket";
-
-        public string MessageDetail { get; private set; }
 
         public void RetrieveTicketScan(string hash)
         {
@@ -89,7 +108,6 @@ namespace Ticketbooth.Scanner.ViewModels
 
                 SetMessageDetail();
                 _ticketChecker.OnCheckTicketResult -= SetTicketScanResult;
-                OnDataChanged?.Invoke(sender, EventArgs.Empty);
             }
         }
 

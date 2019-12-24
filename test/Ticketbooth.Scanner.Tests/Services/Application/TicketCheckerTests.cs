@@ -3,12 +3,12 @@ using NUnit.Framework;
 using Stratis.SmartContracts;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
-using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Services;
+using Ticketbooth.Scanner.Services.Application;
+using Ticketbooth.Scanner.Services.Infrastructure;
 using static TicketContract;
 
-namespace Ticketbooth.Scanner.Tests.Eventing
+namespace Ticketbooth.Scanner.Tests.Services.Application
 {
     public class TicketCheckerTests
     {
@@ -37,7 +37,7 @@ namespace Ticketbooth.Scanner.Tests.Eventing
 
             var methodCallResponse = null as MethodCallResponse;
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
-            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
@@ -65,7 +65,7 @@ namespace Ticketbooth.Scanner.Tests.Eventing
 
             var methodCallResponse = new MethodCallResponse { Success = false };
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
-            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
@@ -98,7 +98,7 @@ namespace Ticketbooth.Scanner.Tests.Eventing
             };
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _smartContractService.Setup(callTo => callTo.FetchReceiptAsync<ReservationQueryResult>("fx0je9sjeehtux")).Returns(Task.FromResult(receipt));
-            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
@@ -136,7 +136,7 @@ namespace Ticketbooth.Scanner.Tests.Eventing
             };
             _ticketService.Setup(callTo => callTo.CheckReservationAsync(ticket.Seat, ticket.Address)).Returns(Task.FromResult(methodCallResponse));
             _smartContractService.Setup(callTo => callTo.FetchReceiptAsync<ReservationQueryResult>("fx0je9sjeehtux")).Returns(Task.FromResult(receipt));
-            _ticketChecker.OnCheckTicket += (object sender, TicketCheckEventArgs e) =>
+            _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
                 Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));

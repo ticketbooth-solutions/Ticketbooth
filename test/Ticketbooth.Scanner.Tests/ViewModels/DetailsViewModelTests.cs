@@ -1,7 +1,7 @@
 ﻿using Moq;
 using NUnit.Framework;
 using System;
-using Ticketbooth.Scanner.Eventing;
+using Ticketbooth.Scanner.Services.Application;
 using Ticketbooth.Scanner.ViewModels;
 
 namespace Ticketbooth.Scanner.Tests.ViewModels

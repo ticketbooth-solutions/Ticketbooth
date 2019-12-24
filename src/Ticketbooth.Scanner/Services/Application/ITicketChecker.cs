@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Eventing.Args;
 
-namespace Ticketbooth.Scanner.Eventing
+namespace Ticketbooth.Scanner.Services.Application
 {
     public interface ITicketChecker
     {

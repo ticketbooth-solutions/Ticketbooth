@@ -9,11 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Converters;
 using Ticketbooth.Scanner.Data.Dtos;
-using Ticketbooth.Scanner.Eventing;
-using Ticketbooth.Scanner.Services;
+using Ticketbooth.Scanner.Services.Application;
 using Ticketbooth.Scanner.Tests.Fakes;
 
-namespace Ticketbooth.Scanner.Tests.Services
+namespace Ticketbooth.Scanner.Tests.Services.Application
 {
     public class QrCodeValidatorTests
     {

@@ -8,10 +8,10 @@ using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
-using Ticketbooth.Scanner.Services;
+using Ticketbooth.Scanner.Services.Infrastructure;
 using static TicketContract;
 
-namespace Ticketbooth.Scanner.Tests.Services
+namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
 {
     public class TicketServiceTests
     {

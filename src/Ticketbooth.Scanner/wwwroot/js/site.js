@@ -14,14 +14,14 @@ function beginScan(dotnetScanner) {
         if (cameras.length > 0) {
             scanner.start(cameras[0]);
             scanner.addListener('scan', OnScan);
-            dotnetScanner.invokeMethodAsync('OnStartScanning');
+            dotnetScanner.invokeMethodAsync('NotifyScanStarted');
             scanning = true;
         } else {
-            dotnetScanner.invokeMethodAsync('OnCameraNotFound');
+            dotnetScanner.invokeMethodAsync('NotifyCameraNotFound');
             console.error('No cameras found.');
         }
     }).catch(function (e) {
-        dotnetScanner.invokeMethodAsync('OnOpenCameraError');
+        dotnetScanner.invokeMethodAsync('NotifyCameraError');
         console.error(e);
     });
 

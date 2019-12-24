@@ -3,9 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Services;
+using Ticketbooth.Scanner.Services.Infrastructure;
 
-namespace Ticketbooth.Scanner.Eventing
+namespace Ticketbooth.Scanner.Services.Application
 {
     public class TicketChecker : ITicketChecker
     {

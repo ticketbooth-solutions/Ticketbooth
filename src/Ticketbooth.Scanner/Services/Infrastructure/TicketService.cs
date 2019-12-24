@@ -9,7 +9,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
 
-namespace Ticketbooth.Scanner.Services
+namespace Ticketbooth.Scanner.Services.Infrastructure
 {
     public class TicketService : ITicketService
     {

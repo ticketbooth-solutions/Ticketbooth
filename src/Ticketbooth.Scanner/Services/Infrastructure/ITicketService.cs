@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
 using static TicketContract;
 
-namespace Ticketbooth.Scanner.Services
+namespace Ticketbooth.Scanner.Services.Infrastructure
 {
     public interface ITicketService
     {

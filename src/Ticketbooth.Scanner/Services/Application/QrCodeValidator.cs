@@ -5,11 +5,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
-using Ticketbooth.Scanner.Eventing;
 
-namespace Ticketbooth.Scanner.Services
+namespace Ticketbooth.Scanner.Services.Application
 {
-    public class QrCodeValidator
+    public class QrCodeValidator : IQrCodeValidator
     {
         private readonly NavigationManager _navigationManager;
         private readonly ITicketChecker _ticketChecker;
@@ -20,16 +19,16 @@ namespace Ticketbooth.Scanner.Services
             _ticketChecker = ticketChecker;
         }
 
-        public async Task<bool> Validate(string qrCodeResult)
+        public async Task<bool> Validate(string qrCodeData)
         {
-            if (string.IsNullOrWhiteSpace(qrCodeResult))
+            if (string.IsNullOrWhiteSpace(qrCodeData))
             {
                 return false;
             }
 
             try
             {
-                var tickets = JsonConvert.DeserializeObject<DigitalTicket[]>(qrCodeResult);
+                var tickets = JsonConvert.DeserializeObject<DigitalTicket[]>(qrCodeData);
                 if (tickets is null || !tickets.Any())
                 {
                     return false;

@@ -2,12 +2,12 @@
 
 @implements IDisposable
 
-@inject DetailsViewModel _details
+@inject DetailsViewModel _detailsViewModel
 
 <div class="container">
-    <i data-feather="@_details.Icon" />
-    <strong>@_details.Message</strong>
-    <span>@_details.MessageDetail</span>
+    <i data-feather="@_detailsViewModel.Icon" />
+    <strong>@_detailsViewModel.Message</strong>
+    <span>@_detailsViewModel.MessageDetail</span>
 </div>
 
 @code {
@@ -16,22 +16,17 @@
 
     protected override void OnInitialized()
     {
-        _details.OnDataChanged += OnDataChanged;
+        _detailsViewModel.OnPropertyChanged += (s, e) => StateHasChanged();
     }
 
     protected override void OnParametersSet()
     {
-        _details.RetrieveTicketScan(Hash);
-    }
-
-    private void OnDataChanged(object sender, EventArgs e)
-    {
-        StateHasChanged();
+        _detailsViewModel.RetrieveTicketScan(Hash);
     }
 
     public void Dispose()
     {
-        _details.OnDataChanged -= OnDataChanged;
-        _details.Dispose();
+        _detailsViewModel.OnPropertyChanged -= (s, e) => StateHasChanged();
+        _detailsViewModel.Dispose();
     }
 }

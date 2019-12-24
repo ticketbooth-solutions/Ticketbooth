@@ -1,64 +1,36 @@
 ﻿@page "/scan"
 
-@inject IJSRuntime _jsRuntime;
-@inject QrCodeValidator _qrCodeValidator;
+@implements IDisposable
 
-<video id="preview" hidden="@(!_streaming)"></video>
+@inject ScanViewModel _scanViewModel;
 
-@if (!_streaming)
+<video id="preview" hidden="@(!_scanViewModel.IsStreaming)"></video>
+
+@if (!_scanViewModel.IsStreaming)
 {
     <div class="container">
         <i data-feather="camera-off"></i>
-        <strong>@_errorMessage</strong>
+        <strong>@_scanViewModel.ErrorMessage</strong>
     </div>
 }
 
 @code {
-    private bool _streaming;
-    private string _errorMessage;
-
     protected override void OnInitialized()
     {
-        _errorMessage = "Allow camera access to scan tickets";
+        _scanViewModel.SetCameraNotOpen();
+        _scanViewModel.OnPropertyChanged += (s, e) => StateHasChanged();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await _jsRuntime.InvokeVoidAsync("beginScan", DotNetObjectReference.Create(this));
+            await _scanViewModel.StartQrScanner();
         }
     }
 
-    [JSInvokable]
-    public async Task<bool> Validate(string qrCodeResult)
+    public void Dispose()
     {
-        return await _qrCodeValidator.Validate(qrCodeResult);
-    }
-
-    [JSInvokable]
-    public Task OnStartScanning()
-    {
-        _streaming = true;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    [JSInvokable]
-    public Task OnCameraNotFound()
-    {
-        _streaming = false;
-        _errorMessage = "No cameras found";
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    [JSInvokable]
-    public Task OnOpenCameraError()
-    {
-        _streaming = false;
-        _errorMessage = "Allow camera access to scan tickets";
-        StateHasChanged();
-        return Task.CompletedTask;
+        _scanViewModel.OnPropertyChanged -= (s, e) => StateHasChanged();
     }
 }

@@ -5,9 +5,9 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
-using Ticketbooth.Scanner.Services;
+using Ticketbooth.Scanner.Services.Infrastructure;
 
-namespace Ticketbooth.Scanner.Tests.Services
+namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
 {
     public class SmartContractServiceTests
     {

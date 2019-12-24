@@ -8,8 +8,8 @@ using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Serialization;
 using Ticketbooth.Scanner.Converters;
-using Ticketbooth.Scanner.Eventing;
-using Ticketbooth.Scanner.Services;
+using Ticketbooth.Scanner.Services.Application;
+using Ticketbooth.Scanner.Services.Infrastructure;
 using Ticketbooth.Scanner.ViewModels;
 
 namespace Ticketbooth.Scanner
@@ -32,11 +32,13 @@ namespace Ticketbooth.Scanner
             services.AddSingleton(network);
             services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
             services.AddSingleton<ISerializer, Serializer>();
+            services.AddScoped<IQrCodeScanner, QrCodeScanner>();
             services.AddScoped<ISmartContractService, SmartContractService>();
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<ITicketChecker, TicketChecker>();
-            services.AddTransient<QrCodeValidator>();
+            services.AddTransient<IQrCodeValidator, QrCodeValidator>();
             services.AddTransient<DetailsViewModel>();
+            services.AddTransient<ScanViewModel>();
             services.AddScoped<AppStateViewModel>();
 
             services.AddRazorPages().AddNewtonsoftJson(options =>

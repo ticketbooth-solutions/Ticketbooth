@@ -4,12 +4,13 @@ using System.Linq;
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
+using Ticketbooth.Scanner.Services.Application;
 
 namespace Ticketbooth.Scanner.ViewModels
 {
-    public class AppStateViewModel : IDisposable
+    public class AppStateViewModel : INotifyPropertyChanged, IDisposable
     {
-        public event EventHandler OnDataChanged;
+        public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
 
         private readonly List<TicketScanModel> _ticketScans;
         private readonly ITicketChecker _ticketChecker;
@@ -28,7 +29,7 @@ namespace Ticketbooth.Scanner.ViewModels
         {
             var seat = new SeatModel(ticketCheck.Seat.Number, ticketCheck.Seat.Letter);
             _ticketScans.Add(new TicketScanModel(ticketCheck.TransactionHash, seat));
-            OnDataChanged?.Invoke(sender, EventArgs.Empty);
+            OnPropertyChanged?.Invoke(sender, new PropertyChangedEventArgs(nameof(TicketScans)));
         }
 
         private void SetTicketScanResult(object sender, TicketCheckResultEventArgs ticketCheckResult)
@@ -48,7 +49,7 @@ namespace Ticketbooth.Scanner.ViewModels
                 ticketScan.SetFaulted();
             }
 
-            OnDataChanged?.Invoke(sender, EventArgs.Empty);
+            OnPropertyChanged?.Invoke(sender, new PropertyChangedEventArgs(nameof(TicketScans)));
         }
 
         public void Dispose()
