@@ -41,3 +41,7 @@ function beginScan(dotnetScanner) {
         scanner.stop();
     }
 }
+
+function replaceIcons() {
+    feather.replace({ 'stroke-width': 1.5 });
+}

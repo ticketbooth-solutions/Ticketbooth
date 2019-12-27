@@ -1,5 +1,5 @@
 html, body {
-    font-family: 'Courier New';
+    font-family: 'Open Sans', sans-serif;
     margin: 0;
 }
 
@@ -16,6 +16,10 @@ app {
     justify-content: center;
     height: 100vh;
     padding: 0 2em;
+}
+
+thead, .button-container {
+    outline: 3px dashed #f2f2f2;
 }
 
 .button-container {
@@ -62,18 +66,8 @@ tbody tr {
     position: relative;
 }
 
-tbody tr:hover:not(.disabled) {
+tbody tr:hover {
     background: #f2f2f2;
-}
-
-tr.disabled::after {
-    position: absolute;
-    content: '';
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    cursor: auto;
 }
 
 td, th {
@@ -94,6 +88,7 @@ table svg {
     display: flex;
     align-items: center;
     user-select: none;
+    text-decoration: none;
 }
 
 .button svg {
@@ -139,4 +134,13 @@ table svg {
     to {
         transform: rotate(360deg);
     }
+}
+
+/* open-sans-regular - latin */
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Open Sans Regular'), local('OpenSans-Regular'), url('../fonts/open-sans-v17-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+    url('../fonts/open-sans-v17-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
 }
