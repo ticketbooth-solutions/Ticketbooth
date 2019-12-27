@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
@@ -10,13 +12,15 @@ namespace Ticketbooth.Scanner.ViewModels
     {
         public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
 
+        private readonly ITicketRepository _ticketRepository;
         private readonly ITicketChecker _ticketChecker;
         private string _hash;
         private TicketScanModel _result;
         private string _messageDetail;
 
-        public DetailsViewModel(ITicketChecker ticketChecker)
+        public DetailsViewModel(ITicketRepository ticketRepository, ITicketChecker ticketChecker)
         {
+            _ticketRepository = ticketRepository;
             _ticketChecker = ticketChecker;
         }
 
@@ -66,13 +70,13 @@ namespace Ticketbooth.Scanner.ViewModels
 
             _hash = hash;
 
-            // TODO: fetch ticket scan result
-
-            if (Result is null)
+            var result = _ticketRepository.TicketScans.FirstOrDefault(scan => scan.TransactionHash.Equals(_hash));
+            if (result is null)
             {
                 return;
             }
 
+            Result = result;
             if (Result.Status == TicketScanStatus.Started)
             {
                 _ticketChecker.OnCheckTicketResult += SetTicketScanResult;

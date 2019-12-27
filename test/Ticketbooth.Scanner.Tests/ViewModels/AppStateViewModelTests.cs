@@ -1,6 +1,9 @@
 ﻿using Moq;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing.Args;
 using Ticketbooth.Scanner.Services.Application;
@@ -11,14 +14,24 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
 {
     public class AppStateViewModelTests
     {
+        private List<TicketScanModel> _ticketScans;
+
         private Mock<ITicketChecker> _ticketChecker;
+        private Mock<ITicketRepository> _ticketRepository;
         private AppStateViewModel _appStateViewModel;
 
         [SetUp]
         public void SetUp()
         {
             _ticketChecker = new Mock<ITicketChecker>();
-            _appStateViewModel = new AppStateViewModel(_ticketChecker.Object);
+            _ticketRepository = new Mock<ITicketRepository>();
+
+            _ticketScans = new List<TicketScanModel>();
+            _ticketRepository.Setup(callTo => callTo.TicketScans).Returns(_ticketScans.AsReadOnly());
+            _ticketRepository.Setup(callTo => callTo.Add(It.IsAny<TicketScanModel>()))
+                .Callback(new Action<TicketScanModel>(ticketScan => _ticketScans.Add(ticketScan)));
+
+            _appStateViewModel = new AppStateViewModel(_ticketRepository.Object, _ticketChecker.Object);
         }
 
         [Test]
