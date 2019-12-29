@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Ticketbooth.Scanner.Converters;
 using Ticketbooth.Scanner.Data.Dtos;
 using Ticketbooth.Scanner.Services.Application;
-using Ticketbooth.Scanner.Tests.Fakes;
+using Ticketbooth.Scanner.Tests.Extensions;
 
 namespace Ticketbooth.Scanner.Tests.Services.Application
 {

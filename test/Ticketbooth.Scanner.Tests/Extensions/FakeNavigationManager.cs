@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using System;
 
-namespace Ticketbooth.Scanner.Tests.Fakes
+namespace Ticketbooth.Scanner.Tests.Extensions
 {
     public class FakeNavigationManager : NavigationManager
     {

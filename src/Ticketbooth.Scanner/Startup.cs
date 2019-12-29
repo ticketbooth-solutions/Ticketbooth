@@ -29,6 +29,10 @@ namespace Ticketbooth.Scanner
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<INodeService, NodeService>();
+            services.AddSingleton<IHealthChecker, HealthChecker>();
+            services.AddHostedService<HealthMonitor>();
+
             var network = CirrusNetwork.NetworksSelector.Mainnet();
             services.AddSingleton(network);
             services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
