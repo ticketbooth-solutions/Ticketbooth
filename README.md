@@ -4,12 +4,20 @@
 
 ## Overview
 
-A smart contract for event ticketing, built on Stratis Platform. Enables the selling of tickets with flexible pricing per event. Includes a refund policy, where ticket holders can release tickets back to the contract, for a fixed fee. Optional enforcement of requiring identity verification of ticket holders, to prevent ticket scalping.
+Smart contract event ticketing, built on Stratis Platform. Enables the selling of tickets with flexible pricing per event. Includes a refund policy, where ticket holders can release tickets back to the contract, for a fixed fee. Optional enforcement of requiring identity verification of ticket holders, to prevent ticket scalping.
 
-This can be integrated with a payment gateway, ticket sales platform and managed by the sales platform or the venue itself.
+Ticketbooth can be integrated with payment gateways, ticket sales platforms and social platforms.
+
+## Projects
+
+### Ticketbooth.Contract
+
+This project contains the smart contract(s) that Ticketbooth is based on.
+
+### Ticketbooth.Scanner
+
+The ticket scanner is a FOSS web application, that is built with Blazor and is designed to interact with the ticketing contract. It allows a venue to scan customer tickets, according to their policies. The goal is to have it eventually be an entirely client-side WASM application, which could be achieved after Blazor WASM is officially released.
 
 ## Documentation
 
-Contract documentation is available on the [wiki](https://github.com/drmathias/Ticketbooth/wiki), along with a case study.
-
-### Further work is continuing on master. The work completed for the hackathon can be found in the ```hackathon-submission``` branch.
+Contract documentation is available on the [wiki](https://github.com/drmathias/Ticketbooth/wiki).
