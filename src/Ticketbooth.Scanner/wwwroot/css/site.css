@@ -7,6 +7,12 @@ app {
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100vh;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
@@ -14,7 +20,7 @@ app {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    flex: 1;
     padding: 0 2em;
 }
 
@@ -36,7 +42,7 @@ thead, .button-container {
 .table-container {
     display: block;
     overflow-y: auto;
-    height: calc(100vh - 100px);
+    flex: 1;
     scrollbar-width: none;
 }
 
@@ -114,6 +120,14 @@ table svg {
     color: #00FF00;
 }
 
+.success {
+    background-color: #ACE6B3;
+}
+
+.failure {
+    background-color: #E6ACAC;
+}
+
 .feather-alert-triangle {
     color: #ff6a00;
 }
@@ -123,8 +137,25 @@ table svg {
 }
 
 #preview {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+}
+
+.node-status {
+    padding: .5em;
+    font-size: 12px;
+    display: grid;
+    grid-column-gap: .5em;
+    grid-template-columns: auto auto 1fr;
+    color: #fff;
+    border-bottom: 2px dashed #fff;
+}
+
+.node-status > *:last-child {
+    text-align: right;
+}
+
+.content {
+    flex: 1;
 }
 
 @keyframes rotation {

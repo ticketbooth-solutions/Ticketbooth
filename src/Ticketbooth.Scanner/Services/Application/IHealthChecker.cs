@@ -1,17 +1,17 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Ticketbooth.Scanner.Eventing;
 
 namespace Ticketbooth.Scanner.Services.Application
 {
-    public interface IHealthChecker
+    public interface IHealthChecker : INotifyPropertyChanged
     {
-        event EventHandler<bool> OnAvailabilityChanged;
-
         bool IsConnected { get; }
 
         bool IsValid { get; }
 
         bool IsAvailable { get; }
+
+        string NodeVersion { get; }
 
         Task UpdateNodeHealthAsync();
     }

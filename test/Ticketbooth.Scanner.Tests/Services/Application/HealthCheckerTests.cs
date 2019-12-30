@@ -58,7 +58,28 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
                 Assert.That(_healthChecker.IsConnected, Is.False, nameof(HealthChecker.IsConnected));
                 Assert.That(_healthChecker.IsValid, Is.True, nameof(HealthChecker.IsValid));
                 Assert.That(_healthChecker.IsAvailable, Is.False, nameof(HealthChecker.IsAvailable));
+                Assert.That(_healthChecker.NodeVersion, Is.Null, nameof(HealthChecker.NodeVersion));
             });
+        }
+
+        [Test]
+        public async Task UpdateNodeHealthAsync_NodeStatusResponse_NodeVersionIsSet()
+        {
+            // Arrange
+            var nodeVersion = "3.0.5.0";
+            var nodeStatus = new NodeStatus
+            {
+                State = "Starting",
+                FeaturesData = SomeRequiredFeaturesReady,
+                Version = nodeVersion
+            };
+            _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
+
+            // Act
+            await _healthChecker.UpdateNodeHealthAsync();
+
+            // Assert
+            Assert.That(_healthChecker.NodeVersion, Is.EqualTo(nodeVersion));
         }
 
         [Test]
@@ -224,7 +245,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableFalseToTrue_OnAvailabilityChangedInvoked()
+        public async Task UpdateNodeHealthAsync_IsAvailableFalseToTrue_OnPropertyChangedInvoked()
         {
             var eventInvoked = false;
             var nodeStatus = new NodeStatus
@@ -234,7 +255,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             };
             _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
 
-            _healthChecker.OnAvailabilityChanged += (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
             await _healthChecker.UpdateNodeHealthAsync();
@@ -242,11 +263,11 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             // Assert
             Assert.That(eventInvoked, Is.True);
 
-            _healthChecker.OnAvailabilityChanged -= (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged -= (s, e) => eventInvoked = true;
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableTrueToTrue_OnAvailabilityChangedNotInvoked()
+        public async Task UpdateNodeHealthAsync_IsAvailableTrueToTrue_OnPropertyChangedNotInvoked()
         {
             var eventInvoked = false;
             var nodeStatus = new NodeStatus
@@ -257,7 +278,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
             await _healthChecker.UpdateNodeHealthAsync();
 
-            _healthChecker.OnAvailabilityChanged += (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
             await _healthChecker.UpdateNodeHealthAsync();
@@ -265,17 +286,18 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             // Assert
             Assert.That(eventInvoked, Is.False);
 
-            _healthChecker.OnAvailabilityChanged -= (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged -= (s, e) => eventInvoked = true;
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_NodeStatusNull_IsConnectedFalseIsAvailableFalse()
+        public async Task UpdateNodeHealthAsync_NodeStatusNull_IsConnectedFalseIsAvailableFalseNodeVersionNull()
         {
             // Arrange
             var nodeStatus = new NodeStatus
             {
                 State = "Started",
-                FeaturesData = AllRequiredFeaturesReady
+                FeaturesData = AllRequiredFeaturesReady,
+                Version = "3.0.5.0"
             };
             _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(nodeStatus));
             await _healthChecker.UpdateNodeHealthAsync();
@@ -290,17 +312,18 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             {
                 Assert.That(_healthChecker.IsConnected, Is.False);
                 Assert.That(_healthChecker.IsAvailable, Is.False);
+                Assert.That(_healthChecker.NodeVersion, Is.Null);
             });
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableFalseToFalse_OnAvailabilityChangedNotInvoked()
+        public async Task UpdateNodeHealthAsync_IsAvailableFalseToFalse_OnPropertyChangedNotInvoked()
         {
             var eventInvoked = false;
 
             _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(null as NodeStatus));
 
-            _healthChecker.OnAvailabilityChanged += (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
             await _healthChecker.UpdateNodeHealthAsync();
@@ -308,11 +331,11 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             // Assert
             Assert.That(eventInvoked, Is.False);
 
-            _healthChecker.OnAvailabilityChanged -= (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged -= (s, e) => eventInvoked = true;
         }
 
         [Test]
-        public async Task UpdateNodeHealthAsync_IsAvailableTrueToFalse_OnAvailabilityChangedInvoked()
+        public async Task UpdateNodeHealthAsync_IsAvailableTrueToFalse_OnPropertyChangedInvoked()
         {
             var eventInvoked = false;
             var nodeStatus = new NodeStatus
@@ -325,7 +348,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
 
             _nodeService.Setup(callTo => callTo.CheckNodeStatus()).Returns(Task.FromResult(null as NodeStatus));
 
-            _healthChecker.OnAvailabilityChanged += (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged += (s, e) => eventInvoked = true;
 
             // Act
             await _healthChecker.UpdateNodeHealthAsync();
@@ -333,7 +356,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             // Assert
             Assert.That(eventInvoked, Is.True);
 
-            _healthChecker.OnAvailabilityChanged -= (s, e) => eventInvoked = true;
+            _healthChecker.OnPropertyChanged -= (s, e) => eventInvoked = true;
         }
     }
 }
