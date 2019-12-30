@@ -40,7 +40,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckRequestEventArgs.Seat));
             };
 
             // Act
@@ -68,7 +68,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckRequestEventArgs.Seat));
             };
 
             // Act
@@ -101,7 +101,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckRequestEventArgs.Seat));
             };
 
             // Act
@@ -139,7 +139,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             _ticketChecker.OnCheckTicket += (sender, e) =>
             {
                 eventInvoked = true;
-                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckEventArgs.Seat));
+                Assert.That(e.Seat, Is.EqualTo(ticket.Seat), nameof(TicketCheckRequestEventArgs.Seat));
             };
 
             // Act

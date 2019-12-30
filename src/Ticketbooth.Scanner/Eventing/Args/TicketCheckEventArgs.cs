@@ -2,9 +2,9 @@
 
 namespace Ticketbooth.Scanner.Eventing.Args
 {
-    public class TicketCheckEventArgs : EventArgs
+    public class TicketCheckRequestEventArgs : EventArgs
     {
-        public TicketCheckEventArgs(string transactionHash, TicketContract.Seat seat)
+        public TicketCheckRequestEventArgs(string transactionHash, TicketContract.Seat seat)
         {
             TransactionHash = transactionHash;
             Seat = seat;

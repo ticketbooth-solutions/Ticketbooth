@@ -9,6 +9,7 @@ using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Serialization;
 using Ticketbooth.Scanner.Converters;
 using Ticketbooth.Scanner.Data;
+using Ticketbooth.Scanner.Eventing.Handlers;
 using Ticketbooth.Scanner.Services.Application;
 using Ticketbooth.Scanner.Services.Infrastructure;
 using Ticketbooth.Scanner.ViewModels;
@@ -42,10 +43,11 @@ namespace Ticketbooth.Scanner
             services.AddScoped<ISmartContractService, SmartContractService>();
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<ITicketChecker, TicketChecker>();
+            services.AddScoped<TicketScanStateHandler>();
             services.AddTransient<IQrCodeValidator, QrCodeValidator>();
             services.AddTransient<DetailsViewModel>();
             services.AddTransient<ScanViewModel>();
-            services.AddScoped<AppStateViewModel>();
+            services.AddTransient<IndexViewModel>();
 
             services.AddRazorPages().AddNewtonsoftJson(options =>
             {

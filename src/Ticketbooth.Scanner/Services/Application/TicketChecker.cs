@@ -9,7 +9,7 @@ namespace Ticketbooth.Scanner.Services.Application
 {
     public class TicketChecker : ITicketChecker
     {
-        public event EventHandler<TicketCheckEventArgs> OnCheckTicket;
+        public event EventHandler<TicketCheckRequestEventArgs> OnCheckTicket;
         public event EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult;
 
         private readonly ISmartContractService _smartContractService;
@@ -29,7 +29,7 @@ namespace Ticketbooth.Scanner.Services.Application
                 return false;
             }
 
-            OnCheckTicket?.Invoke(this, new TicketCheckEventArgs(checkReservationResponse.TransactionId, ticket.Seat));
+            OnCheckTicket?.Invoke(this, new TicketCheckRequestEventArgs(checkReservationResponse.TransactionId, ticket.Seat));
             PollResult(checkReservationResponse.TransactionId, cancellationToken);
             return true;
         }

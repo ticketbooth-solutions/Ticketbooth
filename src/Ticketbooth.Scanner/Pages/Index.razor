@@ -3,7 +3,7 @@
 @implements IDisposable;
 
 @inject NavigationManager _navigationManager;
-@inject AppStateViewModel  _appStateViewModel;
+@inject IndexViewModel  _indexViewModel;
 
 <div class="table-container">
     <table>
@@ -15,7 +15,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var scanResult in _appStateViewModel.TicketScans.Reverse())
+            @foreach (var scanResult in _indexViewModel.TicketScans.Reverse())
             {
                 <tr @onclick="() => ViewDetails(scanResult)">
                     <td>@scanResult.Time.ToLongTimeString()</td>
@@ -37,7 +37,7 @@
 @code {
     protected override void OnInitialized()
     {
-        _appStateViewModel.OnPropertyChanged += (s, e) => StateHasChanged();
+        _indexViewModel.OnPropertyChanged += (s, e) => StateHasChanged();
     }
 
     private void ViewDetails(TicketScanModel scanResult)
@@ -47,6 +47,6 @@
 
     public void Dispose()
     {
-        _appStateViewModel.OnPropertyChanged -= (s, e) => StateHasChanged();
+        _indexViewModel.OnPropertyChanged -= (s, e) => StateHasChanged();
     }
 }

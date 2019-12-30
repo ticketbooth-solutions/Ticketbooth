@@ -8,7 +8,7 @@ namespace Ticketbooth.Scanner.Services.Application
 {
     public interface ITicketChecker
     {
-        event EventHandler<TicketCheckEventArgs> OnCheckTicket;
+        event EventHandler<TicketCheckRequestEventArgs> OnCheckTicket;
 
         event EventHandler<TicketCheckResultEventArgs> OnCheckTicketResult;
 

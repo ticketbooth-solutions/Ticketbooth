@@ -6,19 +6,18 @@ using System.Linq;
 using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing.Args;
+using Ticketbooth.Scanner.Eventing.Handlers;
 using Ticketbooth.Scanner.Services.Application;
-using Ticketbooth.Scanner.ViewModels;
 using static TicketContract;
 
-namespace Ticketbooth.Scanner.Tests.ViewModels
+namespace Ticketbooth.Scanner.Tests.Eventing.Handlers
 {
-    public class AppStateViewModelTests
+    public class TicketScanStateHandlerTests
     {
-        private List<TicketScanModel> _ticketScans;
+        private List<TicketScanModel> _fakeTicketScans;
 
         private Mock<ITicketChecker> _ticketChecker;
         private Mock<ITicketRepository> _ticketRepository;
-        private AppStateViewModel _appStateViewModel;
 
         [SetUp]
         public void SetUp()
@@ -26,12 +25,12 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             _ticketChecker = new Mock<ITicketChecker>();
             _ticketRepository = new Mock<ITicketRepository>();
 
-            _ticketScans = new List<TicketScanModel>();
-            _ticketRepository.Setup(callTo => callTo.TicketScans).Returns(_ticketScans.AsReadOnly());
+            _fakeTicketScans = new List<TicketScanModel>();
+            _ticketRepository.Setup(callTo => callTo.TicketScans).Returns(_fakeTicketScans.AsReadOnly());
             _ticketRepository.Setup(callTo => callTo.Add(It.IsAny<TicketScanModel>()))
-                .Callback(new Action<TicketScanModel>(ticketScan => _ticketScans.Add(ticketScan)));
+                .Callback(new Action<TicketScanModel>(ticketScan => _fakeTicketScans.Add(ticketScan)));
 
-            _appStateViewModel = new AppStateViewModel(_ticketRepository.Object, _ticketChecker.Object);
+            new TicketScanStateHandler(_ticketChecker.Object, _ticketRepository.Object);
         }
 
         [Test]
@@ -40,7 +39,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             // Arrange
             var transactionHash = "84jfw89j";
             var seat = new Seat { Number = 5, Letter = 'B' };
-            var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
+            var ticketCheckEventArgs = new TicketCheckRequestEventArgs(transactionHash, seat);
 
             // Act
             _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
@@ -48,13 +47,13 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(_appStateViewModel.TicketScans.Last(),
+                Assert.That(_fakeTicketScans.Last(),
                     Has.Property(nameof(TicketScanModel.TransactionHash)).EqualTo(transactionHash),
                     nameof(TicketScanModel.TransactionHash));
-                Assert.That(_appStateViewModel.TicketScans.Last(),
+                Assert.That(_fakeTicketScans.Last(),
                     Has.Property(nameof(TicketScanModel.Seat)).Property(nameof(SeatModel.Number)).EqualTo(seat.Number),
                     "Seat number");
-                Assert.That(_appStateViewModel.TicketScans.Last(),
+                Assert.That(_fakeTicketScans.Last(),
                     Has.Property(nameof(TicketScanModel.Seat)).Property(nameof(SeatModel.Letter)).EqualTo(seat.Letter),
                     "Seat letter");
             });
@@ -66,33 +65,14 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             // Arrange
             var transactionHash = "84jfw89j";
             var seat = new Seat { Number = 5, Letter = 'B' };
-            var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
+            var ticketCheckEventArgs = new TicketCheckRequestEventArgs(transactionHash, seat);
 
             // Act
             _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
 
             // Assert
-            Assert.That(_appStateViewModel.TicketScans.Last(),
+            Assert.That(_fakeTicketScans.Last(),
                 Has.Property(nameof(TicketScanModel.Status)).EqualTo(TicketScanStatus.Started));
-        }
-
-        [Test]
-        public void AddTicketScan_OnCheckTicket_OnPropertyChangedRaised()
-        {
-            // Arrange
-            var eventRaised = false;
-            var transactionHash = "84jfw89j";
-            var seat = new Seat { Number = 5, Letter = 'B' };
-            var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
-            _appStateViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
-
-            // Act
-            _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
-
-            // Assert
-            Assert.That(eventRaised, Is.True);
-
-            _appStateViewModel.OnPropertyChanged -= (s, e) => { eventRaised = true; };
         }
 
         [Test]
@@ -108,7 +88,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, ticketCheckResultEventArgs);
 
             // Assert
-            Assert.That(_appStateViewModel.TicketScans.Count(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)), Is.Zero);
+            Assert.That(_fakeTicketScans.Count(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)), Is.Zero);
         }
 
         [Test]
@@ -119,7 +99,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             var seat = new Seat { Number = 5, Letter = 'B' };
             var ownsTicket = true;
             var name = "Benjamin Swift";
-            var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
+            var ticketCheckEventArgs = new TicketCheckRequestEventArgs(transactionHash, seat);
             var ticketCheckResultEventArgs = new TicketCheckResultEventArgs(transactionHash, ownsTicket, name);
             _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
 
@@ -129,10 +109,10 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(_appStateViewModel.TicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
+                Assert.That(_fakeTicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
                     Has.Property(nameof(TicketScanModel.OwnsTicket)).EqualTo(ownsTicket),
                     nameof(TicketScanModel.OwnsTicket));
-                Assert.That(_appStateViewModel.TicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
+                Assert.That(_fakeTicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
                     Has.Property(nameof(TicketScanModel.Name)).EqualTo(name),
                     nameof(TicketScanModel.Name));
             });
@@ -146,7 +126,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             var seat = new Seat { Number = 5, Letter = 'B' };
             var ownsTicket = true;
             var name = "Benjamin Swift";
-            var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
+            var ticketCheckEventArgs = new TicketCheckRequestEventArgs(transactionHash, seat);
             var ticketCheckResultEventArgs = new TicketCheckResultEventArgs(transactionHash, ownsTicket, name, false);
             _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
 
@@ -154,7 +134,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, ticketCheckResultEventArgs);
 
             // Assert
-            Assert.That(_appStateViewModel.TicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
+            Assert.That(_fakeTicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
                 Has.Property(nameof(TicketScanModel.Status)).EqualTo(TicketScanStatus.Completed));
         }
 
@@ -166,7 +146,7 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             var seat = new Seat { Number = 5, Letter = 'B' };
             var ownsTicket = true;
             var name = "Benjamin Swift";
-            var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
+            var ticketCheckEventArgs = new TicketCheckRequestEventArgs(transactionHash, seat);
             var ticketCheckResultEventArgs = new TicketCheckResultEventArgs(transactionHash, ownsTicket, name, true);
             _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
 
@@ -174,49 +154,8 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, ticketCheckResultEventArgs);
 
             // Assert
-            Assert.That(_appStateViewModel.TicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
+            Assert.That(_fakeTicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)),
                 Has.Property(nameof(TicketScanModel.Status)).EqualTo(TicketScanStatus.Faulted));
-        }
-
-        [Test]
-        public void SetTicketScanResult_OnCheckTicketResultTxDoesNotExist_OnPropertyChangedNotRaised()
-        {
-            // Arrange
-            var eventRaised = false;
-            var transactionHash = "84jfw89j";
-            var ticketCheckResultEventArgs = new TicketCheckResultEventArgs(transactionHash, true, "Benjamin Swift");
-
-            _appStateViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
-
-            // Act
-            _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, ticketCheckResultEventArgs);
-
-            // Assert
-            Assert.That(eventRaised, Is.False);
-
-            _appStateViewModel.OnPropertyChanged -= (s, e) => { eventRaised = true; };
-        }
-
-        [Test]
-        public void SetTicketScanResult_OnCheckTicketResultTxExists_OnPropertyChangedRaised()
-        {
-            // Arrange
-            var eventRaised = false;
-            var transactionHash = "84jfw89j";
-            var seat = new Seat { Number = 5, Letter = 'B' };
-            var ticketCheckEventArgs = new TicketCheckEventArgs(transactionHash, seat);
-            var ticketCheckResultEventArgs = new TicketCheckResultEventArgs(transactionHash, true, "Benjamin Swift");
-            _ticketChecker.Raise(callTo => callTo.OnCheckTicket += null, ticketCheckEventArgs);
-
-            _appStateViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
-
-            // Act
-            _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, ticketCheckResultEventArgs);
-
-            // Assert
-            Assert.That(eventRaised, Is.True);
-
-            _appStateViewModel.OnPropertyChanged -= (s, e) => { eventRaised = true; };
         }
     }
 }
