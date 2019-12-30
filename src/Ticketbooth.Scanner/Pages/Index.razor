@@ -6,6 +6,12 @@
 @inject IndexViewModel  _indexViewModel;
 
 <div class="table-container">
+    @if (!_indexViewModel.TicketScans.Any())
+    {
+        <div class="table-empty">
+            No ticket scans yet.
+        </div>
+    }
     <table>
         <thead>
             <tr>

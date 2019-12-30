@@ -1,6 +1,7 @@
 html, body {
     font-family: 'Open Sans', sans-serif;
     margin: 0;
+    line-height: 1.2;
 }
 
 app {
@@ -13,6 +14,7 @@ app {
 .content {
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .container {
@@ -44,6 +46,18 @@ thead, .button-container {
     overflow-y: auto;
     flex: 1;
     scrollbar-width: none;
+    position: relative;
+}
+
+.table-empty {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 3.2em;
+    box-sizing: border-box;
 }
 
 table {
@@ -51,14 +65,11 @@ table {
     border-collapse: collapse;
 }
 
-thead {
-    z-index: 1; /* firefox bug fix */
-}
-
-thead, th { /* chrome bug fix */
+thead, th {
     position: sticky;
     top: 0;
-    background: #fff;
+    background: #fff; /* chrome bug fix */
+    z-index: 1; /* firefox bug fix */
 }
 
 th {
