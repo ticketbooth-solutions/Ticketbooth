@@ -3,8 +3,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Ticketbooth.Scanner.Services.Application;
 
-namespace Ticketbooth.Scanner.Services.Application
+namespace Ticketbooth.Scanner.Services.Background
 {
     public class HealthMonitor : IHostedService, IDisposable
     {

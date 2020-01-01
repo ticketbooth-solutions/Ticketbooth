@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing.Args;
@@ -29,7 +28,7 @@ namespace Ticketbooth.Scanner.Eventing.Handlers
 
         private void OnTicketCheckResult(object sender, TicketCheckResultEventArgs ticketCheckResult)
         {
-            var ticketScan = _ticketRepository.TicketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(ticketCheckResult.TransactionHash));
+            var ticketScan = _ticketRepository.Find(ticketCheckResult.TransactionHash);
             if (ticketScan is null)
             {
                 return;

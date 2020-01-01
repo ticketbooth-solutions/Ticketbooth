@@ -26,7 +26,8 @@ namespace Ticketbooth.Scanner.Tests.Eventing.Handlers
             _ticketRepository = new Mock<ITicketRepository>();
 
             _fakeTicketScans = new List<TicketScanModel>();
-            _ticketRepository.Setup(callTo => callTo.TicketScans).Returns(_fakeTicketScans.AsReadOnly());
+            _ticketRepository.Setup(callTo => callTo.Find(It.IsAny<string>()))
+                .Returns<string>(key => _fakeTicketScans.FirstOrDefault(scan => scan.TransactionHash.Equals(key)));
             _ticketRepository.Setup(callTo => callTo.Add(It.IsAny<TicketScanModel>()))
                 .Callback(new Action<TicketScanModel>(ticketScan => _fakeTicketScans.Add(ticketScan)));
 

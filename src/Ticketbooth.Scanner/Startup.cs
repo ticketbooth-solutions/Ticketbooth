@@ -11,6 +11,7 @@ using Ticketbooth.Scanner.Converters;
 using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Eventing.Handlers;
 using Ticketbooth.Scanner.Services.Application;
+using Ticketbooth.Scanner.Services.Background;
 using Ticketbooth.Scanner.Services.Infrastructure;
 using Ticketbooth.Scanner.ViewModels;
 

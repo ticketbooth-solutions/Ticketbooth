@@ -8,5 +8,7 @@ namespace Ticketbooth.Scanner.Data
         IReadOnlyList<TicketScanModel> TicketScans { get; }
 
         void Add(TicketScanModel ticketScan);
+
+        TicketScanModel Find(string key);
     }
 }
