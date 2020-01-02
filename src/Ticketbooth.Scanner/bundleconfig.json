@@ -1,11 +1,5 @@
 [
   {
-    "outputFileName": "wwwroot/js/feather.min.js",
-    "inputFiles": [
-      "wwwroot/lib/feather-icons/feather.js"
-    ]
-  },
-  {
     "outputFileName": "wwwroot/js/site.min.js",
     "inputFiles": [
       "wwwroot/js/site.js"

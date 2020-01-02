@@ -1,13 +1,10 @@
 ﻿@inherits LayoutComponentBase
 
 @using Services.Application
-@using Eventing.Handlers
 
 @implements IDisposable
 
-@inject IJSRuntime _jsRuntime;
 @inject IHealthChecker _healthChecker;
-@inject TicketScanStateHandler neverDoThisPeople; /*TODO: Event aggregator*/
 
 <div class="node-status @(_healthChecker.IsAvailable ? "success" : "failure")">
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -52,11 +49,6 @@
     protected override void OnInitialized()
     {
         _healthChecker.OnPropertyChanged += async (s, e) => await InvokeAsync(StateHasChanged);
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await _jsRuntime.InvokeVoidAsync("replaceIcons");
     }
 
     public void Dispose()
