@@ -5,7 +5,7 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
 {
     public interface IQrCodeScanner
     {
-        public Func<string, Task<bool>> Validation { set; }
+        public Func<string, Task> Validation { set; }
 
         public Action ScanStarted { set; }
 

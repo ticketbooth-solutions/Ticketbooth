@@ -39,5 +39,6 @@
     public void Dispose()
     {
         _scanViewModel.OnPropertyChanged -= (s, e) => StateHasChanged();
+        _scanViewModel.Dispose();
     }
 }

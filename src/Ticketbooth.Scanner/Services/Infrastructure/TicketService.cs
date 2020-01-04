@@ -1,7 +1,7 @@
 ﻿using Flurl;
 using Flurl.Http;
 using Microsoft.Extensions.Configuration;
-using NBitcoin;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Stratis.SmartContracts;
 using System;
@@ -13,45 +13,53 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
 {
     public class TicketService : ITicketService
     {
+        private readonly ILogger<TicketService> _logger;
         private readonly IConfiguration _configuration;
         private readonly ISerializer _serializer;
-        private readonly Network _network;
 
-        public TicketService(IConfiguration configuration, ISerializer serializer, Network network)
+        public TicketService(ILogger<TicketService> logger, IConfiguration configuration, ISerializer serializer)
         {
+            _logger = logger;
             _configuration = configuration;
             _serializer = serializer;
-            _network = network;
         }
 
         private IFlurlRequest BaseRequest =>
             new Url(_configuration["Stratis:FullNodeApi"])
                 .AppendPathSegments("api", "contract", _configuration["ContractAddress"])
-                .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK, HttpStatusCode.BadRequest })
-                .WithHeader("GasPrice", _configuration["Stratis:GasPrice"])
-                .WithHeader("GasLimit", _configuration["Stratis:GasLimit"])
-                .WithHeader("FeeAmount", _configuration["Stratis:Fee"])
-                .WithHeader("WalletName", _configuration["Stratis:Wallet"])
-                .WithHeader("WalletPassword", _configuration["Stratis:Password"])
-                .WithHeader("Sender", _configuration["Stratis:Address"]);
+                    .WithHeader("GasPrice", _configuration["Stratis:GasPrice"])
+                    .WithHeader("GasLimit", _configuration["Stratis:GasLimit"])
+                    .WithHeader("FeeAmount", _configuration["Stratis:Fee"])
+                    .WithHeader("WalletName", _configuration["Stratis:Wallet"])
+                    .WithHeader("WalletPassword", _configuration["Stratis:Password"])
+                    .WithHeader("Sender", _configuration["Stratis:Address"]);
 
         public async Task<MethodCallResponse> CheckReservationAsync(TicketContract.Seat seat, Address address)
         {
             var seatIdentifier = _serializer.Serialize(seat);
             var seatIdentifierBytes = BitConverter.ToString(seatIdentifier).Replace("-", string.Empty);
 
-            var response = await BaseRequest
-                .WithHeader("Amount", 0)
-                .AppendPathSegments("method", "CheckReservation")
-                .PostJsonAsync(new { seatIdentifierBytes, address });
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                return default;
-            }
+                var response = await BaseRequest
+                    .AppendPathSegments("method", "CheckReservation")
+                    .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK })
+                    .WithHeader("Amount", 0)
+                    .PostJsonAsync(new { seatIdentifierBytes, address });
 
-            var methodCallResponseString = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<MethodCallResponse>(methodCallResponseString);
+                var methodCallResponseString = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<MethodCallResponse>(methodCallResponseString);
+            }
+            catch (FlurlHttpException e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+            catch (JsonException e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
         }
     }
 }

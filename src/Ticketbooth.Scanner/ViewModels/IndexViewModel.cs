@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Easy.MessageHub;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Services.Application;
+using Ticketbooth.Scanner.Eventing.Events;
 
 namespace Ticketbooth.Scanner.ViewModels
 {
@@ -12,28 +14,29 @@ namespace Ticketbooth.Scanner.ViewModels
     {
         public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
 
+        private readonly IMessageHub _eventAggregator;
         private readonly ITicketRepository _ticketRepository;
-        private readonly ITicketChecker _ticketChecker;
+        private readonly Guid ticketScanAddedSubscription;
+        private readonly Guid ticketScanUpdatedSubscription;
 
-        public IndexViewModel(ITicketRepository ticketRepository, ITicketChecker ticketChecker)
+        public IndexViewModel(IMessageHub eventAggregator, ITicketRepository ticketRepository)
         {
+            _eventAggregator = eventAggregator;
             _ticketRepository = ticketRepository;
-            _ticketChecker = ticketChecker;
-            _ticketChecker.OnCheckTicket += OnTicketScanEvent;
-            _ticketChecker.OnCheckTicketResult += OnTicketScanEvent;
+            ticketScanAddedSubscription = _eventAggregator.Subscribe<TicketScanAdded>(
+                message => OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TicketScans))));
+            ticketScanUpdatedSubscription = _eventAggregator.Subscribe<TicketScanUpdated>(
+                message => OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TicketScans))));
         }
 
-        public IReadOnlyList<TicketScanModel> TicketScans => _ticketRepository.TicketScans;
-
-        private void OnTicketScanEvent(object sender, EventArgs e)
-        {
-            OnPropertyChanged?.Invoke(sender, new PropertyChangedEventArgs(nameof(TicketScans)));
-        }
+        public IReadOnlyList<TicketScanModel> TicketScans => _ticketRepository.TicketScans
+            .OrderByDescending(ticketScan => ticketScan.Time)
+            .ToList();
 
         public void Dispose()
         {
-            _ticketChecker.OnCheckTicket -= OnTicketScanEvent;
-            _ticketChecker.OnCheckTicketResult -= OnTicketScanEvent;
+            _eventAggregator.Unsubscribe(ticketScanAddedSubscription);
+            _eventAggregator.Unsubscribe(ticketScanUpdatedSubscription);
         }
     }
 }

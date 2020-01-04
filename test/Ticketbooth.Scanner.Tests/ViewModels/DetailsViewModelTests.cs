@@ -1,11 +1,12 @@
-﻿using Moq;
+﻿using Easy.MessageHub;
+using Moq;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Data.Models;
-using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Services.Application;
+using Ticketbooth.Scanner.Eventing.Events;
 using Ticketbooth.Scanner.ViewModels;
 
 namespace Ticketbooth.Scanner.Tests.ViewModels
@@ -14,22 +15,23 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
     {
         private List<TicketScanModel> _ticketScans;
 
+        private MessageHub _eventAggregator;
         private Mock<ITicketRepository> _ticketRepository;
-        private Mock<ITicketChecker> _ticketChecker;
         private DetailsViewModel _detailsViewModel;
 
         [SetUp]
         public void SetUp()
         {
+            _eventAggregator = new MessageHub();
             _ticketRepository = new Mock<ITicketRepository>();
-            _ticketChecker = new Mock<ITicketChecker>();
 
             _ticketScans = new List<TicketScanModel>();
-            _ticketRepository.Setup(callTo => callTo.TicketScans).Returns(_ticketScans.AsReadOnly());
             _ticketRepository.Setup(callTo => callTo.Add(It.IsAny<TicketScanModel>()))
                 .Callback(new Action<TicketScanModel>(ticketScan => _ticketScans.Add(ticketScan)));
+            _ticketRepository.Setup(callTo => callTo.Find(It.IsAny<string>()))
+                .Returns<string>(key => _ticketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(key)));
 
-            _detailsViewModel = new DetailsViewModel(_ticketRepository.Object, _ticketChecker.Object);
+            _detailsViewModel = new DetailsViewModel(_eventAggregator, _ticketRepository.Object);
         }
 
         [Test]
@@ -88,19 +90,24 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         }
 
         [Test]
-        public void RetrieveTicketScan_TicketScanStatusStarted_SubscribesToTicketCheckResultEvent()
+        public void RetrieveTicketScan_TicketScanStatusStarted_TicketScanUpdatedEventRaisesOnPropertyChanged()
         {
             // Arrange
+            var eventRaised = false;
             var hash = "fre8hrwhruihfjgb4iugnrj";
             var ticketScan = new TicketScanModel(hash, new SeatModel { Number = 1, Letter = 'C' });
             _ticketScans.Add(ticketScan);
             _detailsViewModel.RetrieveTicketScan(hash);
 
+            _detailsViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
+
             // Act
-            _ticketChecker.Raise(callTo => callTo.OnCheckTicketResult += null, new TicketCheckResultEventArgs(hash, true, string.Empty));
+            _eventAggregator.Publish(new TicketScanUpdated(hash));
 
             // Assert
-            Assert.That(ticketScan.Status, Is.EqualTo(TicketScanStatus.Completed));
+            Assert.That(eventRaised, Is.True);
+
+            _detailsViewModel.OnPropertyChanged -= (s, e) => { eventRaised = true; };
         }
 
         [Test]

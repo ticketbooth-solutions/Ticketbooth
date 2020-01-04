@@ -13,7 +13,7 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
             _jsRuntime = jsRuntime;
         }
 
-        public Func<string, Task<bool>> Validation { get; set; }
+        public Func<string, Task> Validation { get; set; }
 
         public Action ScanStarted { get; set; }
 
@@ -27,9 +27,9 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
         }
 
         [JSInvokable]
-        public async Task<bool> Validate(string qrCodeResult)
+        public async Task Validate(string qrCodeResult)
         {
-            return await Validation.Invoke(qrCodeResult);
+            await Validation.Invoke(qrCodeResult);
         }
 
         [JSInvokable]

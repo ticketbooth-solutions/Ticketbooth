@@ -1,9 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace Ticketbooth.Scanner.Services.Application
 {
     public interface IQrCodeValidator
     {
-        Task<bool> Validate(string qrCodeData);
+        event EventHandler OnValidQrCode;
+
+        Task Validate(string qrCodeData);
     }
 }

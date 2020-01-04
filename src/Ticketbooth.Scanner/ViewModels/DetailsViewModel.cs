@@ -1,10 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using Easy.MessageHub;
+using System;
 using Ticketbooth.Scanner.Data;
 using Ticketbooth.Scanner.Data.Models;
 using Ticketbooth.Scanner.Eventing;
 using Ticketbooth.Scanner.Eventing.Args;
-using Ticketbooth.Scanner.Services.Application;
+using Ticketbooth.Scanner.Eventing.Events;
 
 namespace Ticketbooth.Scanner.ViewModels
 {
@@ -12,49 +12,30 @@ namespace Ticketbooth.Scanner.ViewModels
     {
         public event EventHandler<PropertyChangedEventArgs> OnPropertyChanged;
 
+        private readonly IMessageHub _eventAggregator;
         private readonly ITicketRepository _ticketRepository;
-        private readonly ITicketChecker _ticketChecker;
+
         private string _hash;
-        private TicketScanModel _result;
-        private string _messageDetail;
+        private Guid _ticketScanUpdatedSubscription;
 
-        public DetailsViewModel(ITicketRepository ticketRepository, ITicketChecker ticketChecker)
+        public DetailsViewModel(IMessageHub eventAggregator, ITicketRepository ticketRepository)
         {
+            _eventAggregator = eventAggregator;
             _ticketRepository = ticketRepository;
-            _ticketChecker = ticketChecker;
         }
 
-        public TicketScanModel Result
-        {
-            get { return _result; }
-            private set
-            {
-                _result = value;
-                OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Result)));
-            }
-        }
-
-        public string MessageDetail
-        {
-            get { return _messageDetail; }
-            private set
-            {
-                _messageDetail = value;
-                OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MessageDetail)));
-            }
-        }
-
-        public string Icon =>
-            Result is null ? "frown"
-            : Result.Status == TicketScanStatus.Started ? "loader"
-            : Result.Status == TicketScanStatus.Faulted ? "alert-triangle"
-            : Result.OwnsTicket ? "check" : "x";
+        public TicketScanModel Result => _ticketRepository.Find(_hash);
 
         public string Message =>
             Result is null ? "How did I get here?"
             : Result.Status == TicketScanStatus.Started ? "Processing"
             : Result.Status == TicketScanStatus.Faulted ? "Something went wrong"
             : Result.OwnsTicket ? $"Seat {Result?.Seat.Number}{Result?.Seat.Letter}" : "Invalid ticket";
+
+        public string MessageDetail =>
+            Result?.Status == TicketScanStatus.Faulted ? "Ticket scan timed out"
+            : Result?.Status == TicketScanStatus.Completed && Result.OwnsTicket ? Result.Name
+            : null;
 
         public void RetrieveTicketScan(string hash)
         {
@@ -70,54 +51,16 @@ namespace Ticketbooth.Scanner.ViewModels
 
             _hash = hash;
 
-            var result = _ticketRepository.TicketScans.FirstOrDefault(scan => scan.TransactionHash.Equals(_hash));
-            if (result is null)
+            if (Result?.Status == TicketScanStatus.Started)
             {
-                return;
-            }
-
-            Result = result;
-            if (Result.Status == TicketScanStatus.Started)
-            {
-                _ticketChecker.OnCheckTicketResult += SetTicketScanResult;
-            }
-
-            SetMessageDetail();
-        }
-
-        private void SetMessageDetail()
-        {
-            if (Result.Status == TicketScanStatus.Faulted)
-            {
-                MessageDetail = "Ticket scan timed out";
-            }
-            else if (Result.Status == TicketScanStatus.Completed && Result.OwnsTicket)
-            {
-                MessageDetail = Result.Name;
-            }
-        }
-
-        private void SetTicketScanResult(object sender, TicketCheckResultEventArgs ticketCheckResult)
-        {
-            if (ticketCheckResult.TransactionHash.Equals(_hash))
-            {
-                if (!ticketCheckResult.Faulted)
-                {
-                    Result.SetScanResult(ticketCheckResult.OwnsTicket, ticketCheckResult.Name);
-                }
-                else
-                {
-                    Result.SetFaulted();
-                }
-
-                SetMessageDetail();
-                _ticketChecker.OnCheckTicketResult -= SetTicketScanResult;
+                _ticketScanUpdatedSubscription = _eventAggregator.Subscribe<TicketScanUpdated>(
+                    message => OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Message))));
             }
         }
 
         public void Dispose()
         {
-            _ticketChecker.OnCheckTicketResult -= SetTicketScanResult;
+            _eventAggregator.Unsubscribe(_ticketScanUpdatedSubscription);
         }
     }
 }

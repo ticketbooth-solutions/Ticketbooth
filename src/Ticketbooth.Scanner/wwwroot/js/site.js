@@ -27,17 +27,14 @@ function beginScan(dotnetScanner) {
 
     function OnScan(content) {
         console.log(content);
-        dotnetScanner.invokeMethodAsync('Validate', content).then(valid => {
-            if (valid) {
-                StopScanning();
-                window.removeEventListener('popstate', StopScanning);
-            }
-        });
+        dotnetScanner.invokeMethodAsync('Validate', content);
+        StopScanning();
     }
 
     function StopScanning() {
         scanning = false;
         scanner.removeListener('scan', OnScan);
+        window.removeEventListener('popstate', StopScanning);
         scanner.stop();
     }
 }
