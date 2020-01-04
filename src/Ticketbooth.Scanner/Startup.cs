@@ -2,6 +2,7 @@ using Easy.MessageHub;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -58,6 +59,14 @@ namespace Ticketbooth.Scanner
             {
                 options.SerializerSettings.Converters.Add(new AddressConverter(network));
                 JsonConvert.DefaultSettings = () => options.SerializerSettings;
+            });
+
+            // blazor server configures static file middleware, so have to do this in container config
+            var fileExtensionProvider = new FileExtensionContentTypeProvider();
+            fileExtensionProvider.Mappings.Add(".webmanifest", "application/manifest+json");
+            services.Configure<StaticFileOptions>(config =>
+            {
+                config.ContentTypeProvider = fileExtensionProvider;
             });
 
             services.AddServerSideBlazor().AddCircuitOptions(o =>
