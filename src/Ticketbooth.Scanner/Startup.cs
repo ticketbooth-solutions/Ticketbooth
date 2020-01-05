@@ -51,6 +51,7 @@ namespace Ticketbooth.Scanner
             services.AddMediatR(config => config.Using<ParallelMediator>().AsSingleton(), Assembly.GetExecutingAssembly());
             services.AddTransient<IQrCodeScanner, QrCodeScanner>();
             services.AddTransient<IQrCodeValidator, QrCodeValidator>();
+            services.AddTransient<NodeViewModel>();
             services.AddTransient<DetailsViewModel>();
             services.AddTransient<ScanViewModel>();
             services.AddTransient<IndexViewModel>();

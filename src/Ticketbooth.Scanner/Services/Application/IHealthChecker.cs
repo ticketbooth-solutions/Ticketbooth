@@ -11,7 +11,11 @@ namespace Ticketbooth.Scanner.Services.Application
 
         bool IsAvailable { get; }
 
+        string NodeAddress { get; }
+
         string NodeVersion { get; }
+
+        string State { get; }
 
         Task UpdateNodeHealthAsync();
     }

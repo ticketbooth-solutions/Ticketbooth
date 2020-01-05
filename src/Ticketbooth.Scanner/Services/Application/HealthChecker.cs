@@ -22,7 +22,6 @@ namespace Ticketbooth.Scanner.Services.Application
         private readonly INodeService _nodeService;
         private readonly ILogger<HealthChecker> _logger;
 
-        private string _nodeAddress;
         private bool _isConnected;
         private bool _isValid;
 
@@ -43,7 +42,7 @@ namespace Ticketbooth.Scanner.Services.Application
                 if (_isConnected != value)
                 {
                     _isConnected = value;
-                    _logger.LogInformation($"{(_isConnected ? "Connected to" : "Disconnected from")} node at {_nodeAddress}");
+                    _logger.LogInformation($"{(_isConnected ? "Connected to" : "Disconnected from")} node at {NodeAddress}");
                     OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsConnected)));
                 }
             }
@@ -59,11 +58,11 @@ namespace Ticketbooth.Scanner.Services.Application
                     _isValid = value;
                     if (_isValid)
                     {
-                        _logger.LogInformation($"Node at {_nodeAddress} is valid");
+                        _logger.LogInformation($"Node at {NodeAddress} is valid");
                     }
                     else
                     {
-                        _logger.LogWarning($"Node at {_nodeAddress} does not have sufficient features");
+                        _logger.LogWarning($"Node at {NodeAddress} does not have sufficient features");
                     }
                     OnPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsValid)));
                 }
@@ -72,7 +71,11 @@ namespace Ticketbooth.Scanner.Services.Application
 
         public bool IsAvailable => IsConnected && IsValid;
 
+        public string NodeAddress { get; private set; }
+
         public string NodeVersion { get; private set; }
+
+        public string State { get; private set; }
 
         public async Task UpdateNodeHealthAsync()
         {
@@ -80,13 +83,15 @@ namespace Ticketbooth.Scanner.Services.Application
             if (nodeStatus is null)
             {
                 IsConnected = false;
-                _nodeAddress = null;
+                NodeAddress = null;
                 NodeVersion = null;
+                State = null;
                 return;
             }
 
-            _nodeAddress = nodeStatus.ExternalAddress;
+            NodeAddress = nodeStatus.ExternalAddress;
             NodeVersion = nodeStatus.Version;
+            State = nodeStatus.State;
 
             var requiredFeaturesAvailable = nodeStatus.FeaturesData.Where(feature => RequiredFeatures.Contains(feature.Namespace));
             IsValid = requiredFeaturesAvailable.Count() == RequiredFeatures.Length
