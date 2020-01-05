@@ -97,6 +97,10 @@ table svg {
     vertical-align: middle;
 }
 
+a {
+    cursor: pointer;
+}
+
 .button {
     padding: .5em 2em;
     border-radius: 1em;
@@ -155,14 +159,15 @@ table svg {
     padding: .5em;
     font-size: 12px;
     display: grid;
+    align-items: center;
     grid-column-gap: .5em;
-    grid-template-columns: auto auto 1fr;
+    grid-template-columns: auto auto 1fr auto;
     color: #fff;
     border-bottom: 2px dashed #fff;
 }
 
-.node-status > *:last-child {
-    text-align: right;
+.node-status > *:nth-child(3) {
+    justify-self: right;
 }
 
 .content {

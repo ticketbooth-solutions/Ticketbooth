@@ -1,0 +1,30 @@
+﻿@page "/node"
+
+@inject NodeViewModel _nodeViewModel;
+
+@if (_nodeViewModel.IsConnected)
+{
+    <div class="container">
+        <span><strong>Address:</strong> @_nodeViewModel.Address</span>
+        <span><strong>Network:</strong> @_nodeViewModel.Network</span>
+        <span><strong>Version:</strong> @_nodeViewModel.Version</span>
+        <span><strong>State:</strong> @_nodeViewModel.State</span>
+    </div>
+}
+else
+{
+    <Frown Message="Nothing to display"></Frown>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        _nodeViewModel.OnPropertyChanged += async (s, e) => await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _nodeViewModel.OnPropertyChanged -= async (s, e) => await InvokeAsync(StateHasChanged);
+        _nodeViewModel.Dispose();
+    }
+}
