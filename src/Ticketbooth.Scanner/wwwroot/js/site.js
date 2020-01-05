@@ -1,40 +1,53 @@
-﻿let scanning = false;
+﻿(function (history) {
+    var pushState = history.pushState;
+    history.pushState = function (state) {
+        if (typeof history.onpushstate === "function") {
+            history.onpushstate({ state: state });
+        }
+        window.dispatchEvent(new Event('popstate'));
+        return pushState.apply(history, arguments);
+    };
+})(window.history);
 
-function beginScan(dotnetScanner) {
-    if (scanning) {
-        StopScanning();
+async function beginScan(dotnetScanner) {
+    let scanning = true;
+
+    async function StopScanning() {
+        scanning = false;
+        scanner.removeListener('scan', OnScan);
+        window.removeEventListener('pushstate', StopScanning);
+        window.removeEventListener('popstate', StopScanning);
+        await scanner.stop();
+    }
+
+    async function OnScan(content) {
+        console.log(content);
+        await dotnetScanner.invokeMethodAsync('Validate', content);
+        await StopScanning();
     }
 
     let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
-
     window.addEventListener('popstate', StopScanning);
 
-    Instascan.Camera.getCameras().then(function (cameras) {
+    try {
+        let cameras = await Instascan.Camera.getCameras();
 
         if (cameras.length > 0) {
-            scanner.start(cameras[0]);
-            scanner.addListener('scan', OnScan);
-            dotnetScanner.invokeMethodAsync('NotifyScanStarted');
-            scanning = true;
+            scanner.addListener('scan', await OnScan);
+            await scanner.start(cameras[0]);
+            await dotnetScanner.invokeMethodAsync('NotifyScanStarted');
         } else {
-            dotnetScanner.invokeMethodAsync('NotifyCameraNotFound');
+            await dotnetScanner.invokeMethodAsync('NotifyCameraNotFound');
             console.error('No cameras found.');
         }
-    }).catch(function (e) {
-        dotnetScanner.invokeMethodAsync('NotifyCameraError');
-        console.error(e);
-    });
-
-    function OnScan(content) {
-        console.log(content);
-        dotnetScanner.invokeMethodAsync('Validate', content);
-        StopScanning();
     }
-
-    function StopScanning() {
-        scanning = false;
-        scanner.removeListener('scan', OnScan);
-        window.removeEventListener('popstate', StopScanning);
-        scanner.stop();
+    catch(e) {
+        await dotnetScanner.invokeMethodAsync('NotifyCameraError');
+        console.error(e);
+    }
+    finally {
+        if (scanning === false) {
+            await StopScanning();
+        }
     }
 }
