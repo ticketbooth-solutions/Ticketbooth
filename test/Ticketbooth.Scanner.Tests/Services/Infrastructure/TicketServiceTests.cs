@@ -65,7 +65,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
         }
 
         [Test]
-        public async Task CheckReservation_400_LogsErrorReturnsNull()
+        public async Task CheckReservation_400_LogsWarningReturnsNull()
         {
             // Arrange
             var seat = new Seat { Number = 1, Letter = 'C' };
@@ -78,7 +78,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Infrastructure
             var result = await _ticketService.CheckReservationAsync(seat, address);
 
             // Assert
-            _logger.VerifyLog(LogLevel.Error);
+            _logger.VerifyLog(LogLevel.Warning);
             Assert.That(result, Is.EqualTo(null));
         }
 

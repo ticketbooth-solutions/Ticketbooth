@@ -43,9 +43,15 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
             {
                 var response = await BaseRequest
                     .AppendPathSegments("method", "CheckReservation")
-                    .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK })
+                    .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK, HttpStatusCode.BadRequest })
                     .WithHeader("Amount", 0)
                     .PostJsonAsync(new { seatIdentifierBytes, address });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Check reservation call returned Bad Request");
+                    return null;
+                }
 
                 var methodCallResponseString = await response.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<MethodCallResponse>(methodCallResponseString);

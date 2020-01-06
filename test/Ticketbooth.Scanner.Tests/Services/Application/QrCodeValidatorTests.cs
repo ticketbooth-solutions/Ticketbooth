@@ -51,7 +51,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             await _qrCodeValidator.Validate(qrCodeData);
 
             // Assert
-            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>()), Times.Never);
+            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             await _qrCodeValidator.Validate(qrCodeData);
 
             // Assert
-            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>()), Times.Never);
+            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -77,7 +77,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             await _qrCodeValidator.Validate(JsonConvert.SerializeObject(tickets));
 
             // Assert
-            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>()), Times.Never);
+            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -99,7 +99,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             await _qrCodeValidator.Validate(JsonConvert.SerializeObject(tickets));
 
             // Assert
-            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>()), Times.Exactly(count));
+            _ticketChecker.Verify(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>(), It.IsAny<CancellationToken>()), Times.Exactly(count));
         }
 
         [Test]
@@ -117,7 +117,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             };
 
             _ticketChecker
-                .Setup(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>()))
+                .Setup(callTo => callTo.PerformTicketCheckAsync(It.IsAny<DigitalTicket>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(null as string));
 
             _qrCodeValidator.OnValidQrCode += (s, e) => eventInvoked = true;
@@ -161,7 +161,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
 
                 _ticketChecker
                     .Setup(callTo => callTo.PerformTicketCheckAsync(It.Is<DigitalTicket>(
-                        ticket => JsonConvert.SerializeObject(ticket).Equals(JsonConvert.SerializeObject(entry.Value)))))
+                        ticket => JsonConvert.SerializeObject(ticket).Equals(JsonConvert.SerializeObject(entry.Value))), It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult(fail ? null as string : entry.Key));
             }
 
@@ -202,7 +202,7 @@ namespace Ticketbooth.Scanner.Tests.Services.Application
             {
                 _ticketChecker
                     .Setup(callTo => callTo.PerformTicketCheckAsync(It.Is<DigitalTicket>(
-                        ticket => JsonConvert.SerializeObject(ticket).Equals(JsonConvert.SerializeObject(entry.Value)))))
+                        ticket => JsonConvert.SerializeObject(ticket).Equals(JsonConvert.SerializeObject(entry.Value))), It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult(entry.Key));
             }
 

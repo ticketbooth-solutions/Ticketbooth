@@ -44,7 +44,8 @@ namespace Ticketbooth.Scanner.Services.Application
                 var ticketCheckTransactions = new Dictionary<string, DigitalTicket>();
                 var ticketChecks = await Task.WhenAll(tickets.Select(async ticket =>
                 {
-                    var result = await _ticketChecker.PerformTicketCheckAsync(ticket);
+                    var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                    var result = await _ticketChecker.PerformTicketCheckAsync(ticket, cancellationTokenSource.Token);
                     if (!(result is null))
                     {
                         ticketCheckTransactions.Add(result, ticket);
