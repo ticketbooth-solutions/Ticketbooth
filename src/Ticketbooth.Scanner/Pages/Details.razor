@@ -1,0 +1,75 @@
+﻿@page "/details/{hash}"
+
+@implements IDisposable
+
+@inject DetailsViewModel _detailsViewModel
+
+@if (_detailsViewModel.Result is null)
+{
+    <NotFound />
+}
+else
+{
+    <div class="container">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-@(_detailsViewModel.Result.Status == TicketScanStatus.Started ? "loader"
+                                  : _detailsViewModel.Result.Status == TicketScanStatus.Faulted ? "alert-triangle"
+                                  : _detailsViewModel.Result.OwnsTicket ? "check" : "x")">
+            @if (_detailsViewModel.Result.Status == TicketScanStatus.Started)
+            {
+                <line xmlns="http://www.w3.org/2000/svg" x1="12" y1="2" x2="12" y2="6" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="12" y1="18" x2="12" y2="22" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="2" y1="12" x2="6" y2="12" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="18" y1="12" x2="22" y2="12" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+            }
+            else if (_detailsViewModel.Result.Status == TicketScanStatus.Faulted)
+            {
+                <path xmlns="http://www.w3.org/2000/svg" d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="12" y1="9" x2="12" y2="13" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="12" y1="17" x2="12.01" y2="17" />
+            }
+            else if (_detailsViewModel.Result.OwnsTicket)
+            {
+                <polyline xmlns="http://www.w3.org/2000/svg" points="20 6 9 17 4 12" />
+            }
+            else
+            {
+                <line xmlns="http://www.w3.org/2000/svg" x1="18" y1="6" x2="6" y2="18" />
+                <line xmlns="http://www.w3.org/2000/svg" x1="6" y1="6" x2="18" y2="18" />
+            }
+        </svg>
+        <strong>@_detailsViewModel.Message</strong>
+        @if (!(_detailsViewModel.MessageDetail is null))
+        {
+            <span>@_detailsViewModel.MessageDetail</span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Hash { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _detailsViewModel.OnPropertyChanged += (s, e) => StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        _detailsViewModel.RetrieveTicketScan(Hash);
+    }
+
+    public void Dispose()
+    {
+        _detailsViewModel.OnPropertyChanged -= (s, e) => StateHasChanged();
+        _detailsViewModel.Dispose();
+    }
+}

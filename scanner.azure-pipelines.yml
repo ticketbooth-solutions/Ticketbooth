@@ -4,29 +4,44 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+- scanner-app
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
   buildConfiguration: 'Release'
+  srcProject: 'src/Ticketbooth.Scanner/Ticketbooth.Scanner.csproj'
+  testProject: 'test/Ticketbooth.Scanner.Tests/Ticketbooth.Scanner.Tests.csproj'
 
 steps:
+
+- task: UseDotNet@2
+  displayName: Use .NET Core 3
+  inputs:
+    packageType: 'sdk'
+    version: '3.0.101'
 
 - task: DotNetCoreCLI@2
   displayName: Restore
   inputs:
     command: 'restore'
+    projects: |
+     $(srcProject)
+     $(testProject)
     feedsToUse: 'select'
 
 - task: DotNetCoreCLI@2
   displayName: Build
   inputs:
     command: 'build'
+    projects: |
+     $(srcProject)
+     $(testProject)
 
 - task: DotNetCoreCLI@2
   displayName: Test
   inputs:
     command: 'test'
+    projects: $(testProject)
     testRunTitle: 'Contract Tests'

@@ -1,15 +1,27 @@
 # Ticketbooth
 
-[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/drmathias.Ticketbooth?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=master)
-
 ## Overview
 
-A smart contract for event ticketing, built on Stratis Platform. Enables the selling of tickets with flexible pricing per event. Includes a refund policy, where ticket holders can release tickets back to the contract, for a fixed fee. Optional enforcement of requiring identity verification of ticket holders, to prevent ticket scalping.
+Smart contract event ticketing, built on Stratis platform. Enables the selling of tickets with flexible pricing per event. Includes a refund policy, where ticket holders can release tickets back to the contract, for a fixed fee. Optional enforcement of requiring identity verification of ticket holders, to prevent ticket scalping.
 
-This can be integrated with a payment gateway, ticket sales platform and managed by the sales platform or the venue itself.
+Ticketbooth can be integrated with payment gateways, ticket sales platforms and social platforms.
 
-## Documentation
+## Projects
 
-Contract documentation is available on the [wiki](https://github.com/drmathias/Ticketbooth/wiki), along with a case study.
+### Ticketbooth.Contract
 
-### Further work is continuing on master. The work completed for the hackathon can be found in the ```hackathon-submission``` branch.
+[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Contract?branchName=scanner-app)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=scanner-app)
+
+This project contains the smart contract(s) that Ticketbooth is based on.
+
+### Ticketbooth.Scanner
+
+[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Scanner%20App?branchName=scanner-app)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=9&branchName=scanner-app)
+
+A web application allowing venues to scan tickets, built with Blazor.
+
+## Resources
+
+* [Open issues](https://github.com/drmathias/Ticketbooth/issues)
+* [Contributing guide](https://github.com/drmathias/Ticketbooth/blob/master/CONTRIBUTING.md)
+* [Code of conduct](https://github.com/drmathias/Ticketbooth/blob/master/CODE_OF_CONDUCT.md)
