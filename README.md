@@ -10,13 +10,13 @@ Ticketbooth can be integrated with payment gateways, ticket sales platforms and 
 
 ### Ticketbooth.Contract
 
-[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Contract?branchName=scanner-app)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=scanner-app)
+[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Contract?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=master)
 
 This project contains the smart contract(s) that Ticketbooth is based on.
 
 ### Ticketbooth.Scanner
 
-[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Scanner%20App?branchName=scanner-app)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=9&branchName=scanner-app)
+[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Scanner%20App?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=9&branchName=master)
 
 A web application allowing venues to scan tickets, built with Blazor.
 
