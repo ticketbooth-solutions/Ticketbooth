@@ -6,6 +6,12 @@
     ]
   },
   {
+    "outputFileName": "wwwroot/js/instascan.min.js",
+    "inputFiles": [
+      "wwwroot/js/instascan.js"
+    ]
+  },
+  {
     "outputFileName": "wwwroot/css/site.min.css",
     "inputFiles": [
       "wwwroot/css/site.css"
