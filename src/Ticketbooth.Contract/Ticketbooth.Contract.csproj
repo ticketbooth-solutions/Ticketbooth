@@ -7,7 +7,7 @@
     <Authors>Adam Shirt</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.0-rc1</Version>
+    <Version>1.0.0-rc2</Version>
     <PackageId>Ticketbooth</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/drmathias/Ticketbooth</RepositoryUrl>

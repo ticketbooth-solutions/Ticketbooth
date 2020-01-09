@@ -117,7 +117,14 @@ namespace Ticketbooth.Contract.Tests
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
-                It.Is<Ticket[]>(tickets => tickets.SequenceEqual(_seats.Select(seat => new Ticket { Seat = seat, Price = 0, Address = Address.Zero })))));
+                It.Is<Ticket[]>(tickets => tickets.SequenceEqual(_seats.Select(seat => new Ticket
+                {
+                    Seat = seat,
+                    Price = 0,
+                    Address = Address.Zero,
+                    Secret = null,
+                    CustomerIdentifier = null
+                })))));
         }
 
         [Test]
@@ -393,7 +400,14 @@ namespace Ticketbooth.Contract.Tests
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
-                It.Is<Ticket[]>(tickets => tickets.SequenceEqual(_seats.Select(seat => new Ticket { Seat = seat, Price = 0, Address = Address.Zero, CustomerIdentifier = string.Empty })))));
+                It.Is<Ticket[]>(tickets => tickets.SequenceEqual(_seats.Select(seat => new Ticket
+                {
+                    Seat = seat,
+                    Price = 0,
+                    Address = Address.Zero,
+                    Secret = null,
+                    CustomerIdentifier = null
+                })))));
         }
 
         [Test]
@@ -533,38 +547,42 @@ namespace Ticketbooth.Contract.Tests
             Assert.That(availability, Is.True);
         }
 
-        [Test]
-        public void OnReserve_RequiresCustomerIdentityNothingProvided_SendsRefundAndThrowsAssertException()
-        {
-            // Arrange
-            var address = new Address(8, 2, 3, 3, 9);
-            var amount = (ulong)1000;
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _seats.First();
-
-            _message.Setup(callTo => callTo.Sender).Returns(address);
-            _message.Setup(callTo => callTo.Value).Returns(amount);
-            _block.Setup(callTo => callTo.Number).Returns(50);
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-            _persistentState.Setup(callTo => callTo.GetBool("RequireIdentityVerification")).Returns(true);
-            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
-
-            // Act
-            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat)));
-
-            // Assert
-            Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, amount), Times.Once);
-        }
-
+        [TestCase((string)null)]
         [TestCase("")]
-        [TestCase(" ")]
-        public void OnReserve_RequiresCustomerIdentityBadInputProvided_SendsRefundAndThrowsAssertException(string customerIdentifier)
+        public void OnReserve_SecretIsNotValid_ThrowsAssertException(string secret)
         {
             // Arrange
+            var address = new Address(8, 2, 3, 3, 9);
+            var amount = (ulong)1000;
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
+
+            var querySeat = _seats.First();
+
+            var tickets = Tickets;
+            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
+            var targetIndex = Array.IndexOf(tickets, targetTicket);
+            tickets[targetIndex].Price = amount;
+
+            _message.Setup(callTo => callTo.Sender).Returns(address);
+            _message.Setup(callTo => callTo.Value).Returns(amount);
+            _block.Setup(callTo => callTo.Number).Returns(50);
+            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+
+            // Act
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret));
+
+            // Assert
+            Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
+        }
+
+        [Test]
+        public void OnReserve_RequiresCustomerIdentityNothingProvided_ThrowsAssertException()
+        {
+            // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -581,17 +599,45 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), customerIdentifier));
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret));
 
             // Assert
             Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, amount), Times.Once);
+        }
+
+        [TestCase((string)null)]
+        [TestCase("")]
+        public void OnReserve_RequiresCustomerIdentityBadInputProvided_ThrowsAssertException(string customerIdentifier)
+        {
+            // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
+            var address = new Address(8, 2, 3, 3, 9);
+            var amount = (ulong)1000;
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
+
+            var querySeat = _seats.First();
+
+            _message.Setup(callTo => callTo.Sender).Returns(address);
+            _message.Setup(callTo => callTo.Value).Returns(amount);
+            _block.Setup(callTo => callTo.Number).Returns(50);
+            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
+            _persistentState.Setup(callTo => callTo.GetBool("RequireIdentityVerification")).Returns(true);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+
+            // Act
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret, customerIdentifier));
+
+            // Assert
+            Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
         }
 
         [Test]
-        public void OnReserve_SaleNotInProgress_SendsRefundAndThrowsAssertException()
+        public void OnReserve_SaleNotInProgress_ThrowsAssertException()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -607,18 +653,18 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(0);
 
             // Act
-            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat)));
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret));
 
             // Assert
             Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, amount), Times.Once);
         }
 
         [TestCase((ulong)100)]
         [TestCase((ulong)101)]
-        public void OnReserve_SaleInProgressAndFinished_SendsRefundAndThrowsAssertException(ulong currentBlock)
+        public void OnReserve_SaleInProgressAndFinished_ThrowsAssertException(ulong currentBlock)
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -634,17 +680,17 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat)));
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret));
 
             // Assert
             Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, amount), Times.Once);
         }
 
         [Test]
-        public void OnReserve_SeatDoesNotExist_SendsRefundAndThrowsAssertException()
+        public void OnReserve_SeatDoesNotExist_ThrowsAssertException()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -660,17 +706,17 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat)));
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret));
 
             // Assert
             Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-            _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, amount), Times.Once);
         }
 
         [Test]
-        public void OnReserve_SeatAlreadyReserved_SendsRefundAndReturnsFalse()
+        public void OnReserve_SeatAlreadyReserved_ThrowsAssertException()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -691,17 +737,17 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret));
 
             // Assert
-            Assert.That(isReserved, Is.False);
-            _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, amount), Times.Once);
+            Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
         }
 
         [Test]
-        public void OnReserve_NotEnoughFunds_SendsRefundAndReturnsFalse()
+        public void OnReserve_NotEnoughFunds_ThrowsAssertException()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -722,11 +768,10 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret));
 
             // Assert
-            Assert.That(isReserved, Is.False);
-            _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, amount), Times.Once);
+            Assert.That(reserveCall, Throws.Exception.TypeOf<SmartContractAssertException>());
         }
 
         [TestCase("E")]
@@ -735,6 +780,7 @@ namespace Ticketbooth.Contract.Tests
         public void OnReserve_RequiresCustomerIdentityValidInputProvided_ThrowsNothing(string customerIdentifier)
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -751,16 +797,17 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), customerIdentifier));
+            var reserveCall = new Action(() => ticketContract.Reserve(_serializer.Serialize(querySeat), secret, customerIdentifier));
 
             // Assert
             Assert.That(reserveCall, Throws.Nothing);
         }
 
         [Test]
-        public void OnReserve_CanReserveAndTooMuchFunds_SendsRefundAndReturnsTrue()
+        public void OnReserve_CanReserveAndTooMuchFunds_SendsRefund()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var difference = (ulong)200;
             var amount = (ulong)1000;
@@ -782,10 +829,9 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
+            ticketContract.Reserve(_serializer.Serialize(querySeat), secret);
 
             // Assert
-            Assert.That(isReserved, Is.True);
             _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, address, difference), Times.Once);
         }
 
@@ -793,6 +839,7 @@ namespace Ticketbooth.Contract.Tests
         public void OnReserve_CanReserveAndExactFunds_DoesNotRefundAndReturnsTrue()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -813,10 +860,9 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
 
             // Act
-            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
+            ticketContract.Reserve(_serializer.Serialize(querySeat), secret);
 
             // Assert
-            Assert.That(isReserved, Is.True);
             _internalTransactionExecuter.Verify(callTo => callTo.Transfer(_smartContractState.Object, It.IsAny<Address>(), It.IsAny<ulong>()), Times.Never);
         }
 
@@ -824,6 +870,7 @@ namespace Ticketbooth.Contract.Tests
         public void OnReserve_CanReserve_TicketsAreSetWithReserveAddress()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var address = new Address(8, 2, 3, 3, 9);
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -846,7 +893,7 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Invocations.Clear();
 
             // Act
-            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
+            ticketContract.Reserve(_serializer.Serialize(querySeat), secret);
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
@@ -854,9 +901,79 @@ namespace Ticketbooth.Contract.Tests
         }
 
         [Test]
+        public void OnReserve_CanReserve_TicketsAreSetWithSecret()
+        {
+            // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
+            var address = new Address(8, 2, 3, 3, 9);
+            var amount = (ulong)1000;
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
+
+            var querySeat = _seats.First();
+
+            var tickets = Tickets;
+            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
+            var targetIndex = Array.IndexOf(tickets, targetTicket);
+            tickets[targetIndex].Price = amount;
+
+            _message.Setup(callTo => callTo.Sender).Returns(address);
+            _message.Setup(callTo => callTo.Value).Returns(amount);
+            _block.Setup(callTo => callTo.Number).Returns(50);
+            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+
+            _persistentState.Invocations.Clear();
+
+            // Act
+            ticketContract.Reserve(_serializer.Serialize(querySeat), secret);
+
+            // Assert
+            _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
+                It.Is<Ticket[]>(tickets => tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter).Secret.Equals(secret))));
+        }
+
+        [Test]
+        public void OnReserve_CanReserve_TicketIsLogged()
+        {
+            var customerIdentifier = "yJl89Jujhyhnioiewf==";
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
+            var address = new Address(8, 2, 3, 3, 9);
+            var amount = (ulong)1000;
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
+
+            var querySeat = _seats.First();
+
+            var tickets = Tickets;
+            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
+            var targetIndex = Array.IndexOf(tickets, targetTicket);
+            tickets[targetIndex].Price = amount;
+
+            _message.Setup(callTo => callTo.Sender).Returns(address);
+            _message.Setup(callTo => callTo.Value).Returns(amount);
+            _block.Setup(callTo => callTo.Number).Returns(50);
+            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+
+            _persistentState.Invocations.Clear();
+
+            // Act
+            ticketContract.Reserve(_serializer.Serialize(querySeat), secret, customerIdentifier);
+
+            // Assert
+            _contractLogger.Verify(callTo => callTo.Log(
+                It.IsAny<ISmartContractState>(),
+                It.Is<Ticket>(ticket => ticket.Address == address && ticket.Secret.Equals(secret) && ticket.CustomerIdentifier.Equals(customerIdentifier))));
+        }
+
+        [Test]
         public void OnReserve_CustomerIdentifierNotSupplied_TicketsAreSetWithEmptyCustomerIdentifier()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
 
@@ -878,7 +995,7 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Invocations.Clear();
 
             // Act
-            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat));
+            ticketContract.Reserve(_serializer.Serialize(querySeat), secret);
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
@@ -889,6 +1006,7 @@ namespace Ticketbooth.Contract.Tests
         public void OnReserve_CustomerIdentifierSupplied_TicketsAreSetWithCusomterIdentifier()
         {
             // Arrange
+            var secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
             var customerIdentifier = "Holly Turner";
             var amount = (ulong)1000;
             _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
@@ -911,170 +1029,11 @@ namespace Ticketbooth.Contract.Tests
             _persistentState.Invocations.Clear();
 
             // Act
-            var isReserved = ticketContract.Reserve(_serializer.Serialize(querySeat), customerIdentifier);
+            ticketContract.Reserve(_serializer.Serialize(querySeat), secret, customerIdentifier);
 
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
-                It.Is<Ticket[]>(tickets => tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter).CustomerIdentifier == customerIdentifier)));
-        }
-
-        [Test]
-        public void OnCheckReservation_EmptyAddress_ThrowsAssertException()
-        {
-            // Arrange
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _seats.First();
-
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-
-            // Act
-            var checkReservationCall = new Action(() => ticketContract.CheckReservation(_serializer.Serialize(querySeat), Address.Zero));
-
-            // Assert
-            Assert.That(checkReservationCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-        }
-
-        [Test]
-        public void OnCheckReservation_SeatDoesNotExist_ThrowsAssertException()
-        {
-            // Arrange
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _invalidSeat;
-
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-
-            // Act
-            var checkReservationCall = new Action(() => ticketContract.CheckReservation(_serializer.Serialize(querySeat), new Address(5, 3, 2, 2, 1)));
-
-            // Assert
-            Assert.That(checkReservationCall, Throws.Exception.TypeOf<SmartContractAssertException>());
-        }
-
-        [Test]
-        public void OnCheckReservation_SeatAndTicketAddressExist_ThrowsNothing()
-        {
-            // Arrange
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _seats.First();
-
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(Tickets);
-
-            // Act
-            var checkReservationCall = new Action(() => ticketContract.CheckReservation(_serializer.Serialize(querySeat), new Address(5, 3, 2, 2, 1)));
-
-            // Assert
-            Assert.That(checkReservationCall, Throws.Nothing);
-        }
-
-        [Test]
-        public void OnCheckReservation_TicketAddressIsZero_ReturnsFalse()
-        {
-            // Arrange
-            var address = Address.Zero;
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _seats.First();
-
-            var tickets = Tickets;
-            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
-            var targetIndex = Array.IndexOf(tickets, targetTicket);
-            tickets[targetIndex].Address = address;
-
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-
-            // Act
-            var reservationQueryResult = ticketContract.CheckReservation(_serializer.Serialize(querySeat), new Address(5, 3, 4, 5, 9));
-
-            // Assert
-            Assert.That(reservationQueryResult.OwnsTicket, Is.False);
-        }
-
-        [Test]
-        public void OnCheckReservation_TicketAddressDoesNotMatch_ReturnsFalse()
-        {
-            // Arrange
-            var address = new Address(5, 3, 4, 5, 9);
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _seats.First();
-
-            var tickets = Tickets;
-            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
-            var targetIndex = Array.IndexOf(tickets, targetTicket);
-            tickets[targetIndex].Address = address;
-
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-
-            // Act
-            var reservationQueryResult = ticketContract.CheckReservation(_serializer.Serialize(querySeat), new Address(4, 5, 3, 2, 1));
-
-            // Assert
-            Assert.That(reservationQueryResult.OwnsTicket, Is.False);
-        }
-
-        [Test]
-        public void OnCheckReservation_TicketAddressMatches_ReturnsTrue()
-        {
-            // Arrange
-            var address = new Address(5, 3, 4, 5, 9);
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _seats.First();
-
-            var tickets = Tickets;
-            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
-            var targetIndex = Array.IndexOf(tickets, targetTicket);
-            tickets[targetIndex].Address = address;
-
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-
-            // Act
-            var reservationQueryResult = ticketContract.CheckReservation(_serializer.Serialize(querySeat), address);
-
-            // Assert
-            Assert.That(reservationQueryResult.OwnsTicket, Is.True);
-        }
-
-        [Test]
-        public void OnCheckReservation_TicketAddressMatches_CustomerIdentifierReturned()
-        {
-            // Arrange
-            var address = new Address(5, 3, 4, 5, 9);
-            var customerIdentifier = "James Turner";
-            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
-
-            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
-
-            var querySeat = _seats.First();
-
-            var tickets = Tickets;
-            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
-            var targetIndex = Array.IndexOf(tickets, targetTicket);
-            tickets[targetIndex].Address = address;
-            tickets[targetIndex].CustomerIdentifier = customerIdentifier;
-
-            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
-
-            // Act
-            var reservationQueryResult = ticketContract.CheckReservation(_serializer.Serialize(querySeat), address);
-
-            // Assert
-            Assert.That(reservationQueryResult.CustomerIdentifier, Is.EqualTo(customerIdentifier));
+                It.Is<Ticket[]>(tickets => tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter).CustomerIdentifier.Equals(customerIdentifier))));
         }
 
         [Test]
@@ -1507,6 +1466,37 @@ namespace Ticketbooth.Contract.Tests
         }
 
         [Test]
+        public void OnReleaseTicket_CanReleaseTicket_TicketsAreSetWithSecretReset()
+        {
+            // Arrange
+            var address = new Address(3, 2, 4, 3, 2);
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
+
+            var querySeat = _seats.First();
+
+            var tickets = Tickets;
+            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
+            var targetIndex = Array.IndexOf(tickets, targetTicket);
+            tickets[targetIndex].Address = address;
+            tickets[targetIndex].Secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
+
+            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
+            _block.Setup(callTo => callTo.Number).Returns(50);
+            _message.Setup(callTo => callTo.Sender).Returns(address);
+
+            // Act
+            ticketContract.ReleaseTicket(_serializer.Serialize(querySeat));
+
+            // Assert
+            _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
+                It.Is<Ticket[]>(tickets => tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter).Secret == null)));
+        }
+
+        [Test]
         public void OnReleaseTicket_CanReleaseTicket_TicketsAreSetWithCustomerIdentifierReset()
         {
             // Arrange
@@ -1521,6 +1511,7 @@ namespace Ticketbooth.Contract.Tests
             var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
             var targetIndex = Array.IndexOf(tickets, targetTicket);
             tickets[targetIndex].Address = address;
+            tickets[targetIndex].CustomerIdentifier = "Benjamin Rich Swift";
 
             _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
             _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
@@ -1534,6 +1525,39 @@ namespace Ticketbooth.Contract.Tests
             // Assert
             _persistentState.Verify(callTo => callTo.SetArray(nameof(TicketContract.Tickets),
                 It.Is<Ticket[]>(tickets => tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter).CustomerIdentifier == null)));
+        }
+
+        [Test]
+        public void OnReleaseTicket_CanReleaseTicket_TicketIsLogged()
+        {
+            // Arrange
+            var address = new Address(3, 2, 4, 3, 2);
+            _message.Setup(callTo => callTo.Sender).Returns(_ownerAddress);
+
+            var ticketContract = new TicketContract(_smartContractState.Object, _serializer.Serialize(_seats), _venueName);
+
+            var querySeat = _seats.First();
+
+            var tickets = Tickets;
+            var targetTicket = tickets.First(ticket => ticket.Seat.Number == querySeat.Number && ticket.Seat.Letter == querySeat.Letter);
+            var targetIndex = Array.IndexOf(tickets, targetTicket);
+            tickets[targetIndex].Address = address;
+            tickets[targetIndex].Secret = "yNEYqRFX4dVk5xKTzoNpJQ==";
+            tickets[targetIndex].CustomerIdentifier = "Benjamin Rich Swift";
+
+            _persistentState.Setup(callTo => callTo.GetArray<Ticket>(nameof(TicketContract.Tickets))).Returns(tickets);
+            _persistentState.Setup(callTo => callTo.GetUInt64("EndOfSale")).Returns(100);
+            _persistentState.Setup(callTo => callTo.GetUInt64("NoRefundBlocks")).Returns(10);
+            _block.Setup(callTo => callTo.Number).Returns(50);
+            _message.Setup(callTo => callTo.Sender).Returns(address);
+
+            // Act
+            ticketContract.ReleaseTicket(_serializer.Serialize(querySeat));
+
+            // Assert
+            _contractLogger.Verify(callTo => callTo.Log(
+                It.IsAny<ISmartContractState>(),
+                It.Is<Ticket>(ticket => ticket.Address == Address.Zero && ticket.Secret == null && ticket.CustomerIdentifier == null)));
         }
     }
 }
