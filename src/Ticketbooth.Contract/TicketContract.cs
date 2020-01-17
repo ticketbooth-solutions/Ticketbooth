@@ -190,24 +190,24 @@ public class TicketContract : SmartContract
     /// Reserves a ticket for the callers address
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
-    /// <param name="secret">The secret holding ticket ownership</param>
+    /// <param name="secret">The encrypted secret holding ticket ownership</param>
     /// <returns>Whether the seat was successfully reserved</returns>
-    public void Reserve(byte[] seatIdentifierBytes, string secret)
+    public void Reserve(byte[] seatIdentifierBytes, byte[] secret)
     {
-        Reserve(seatIdentifierBytes, secret, string.Empty);
+        Reserve(seatIdentifierBytes, secret, null);
     }
 
     /// <summary>
     /// Reserves a ticket for the callers address and with an identifier for the customer
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
-    /// <param name="secret">The secret holding ticket ownership</param>
-    /// <param name="customerIdentifier">A verifiable identifier for the customer</param>
+    /// <param name="secret">The encrypted secret holding ticket ownership</param>
+    /// <param name="customerIdentifier">An encrypted verifiable identifier for the customer</param>
     /// <returns>Whether the seat was successfully reserved</returns>
-    public void Reserve(byte[] seatIdentifierBytes, string secret, string customerIdentifier)
+    public void Reserve(byte[] seatIdentifierBytes, byte[] secret, byte[] customerIdentifier)
     {
-        Assert(!string.IsNullOrEmpty(secret), "Invalid secret");
-        Assert(!RequireIdentityVerification || !string.IsNullOrEmpty(customerIdentifier), "Customer identifier is required");
+        Assert(secret != null, "Invalid secret");
+        Assert(!RequireIdentityVerification || customerIdentifier != null, "Invalid customer identifier");
         Assert(SaleOpen, "Sale not open");
 
         var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
@@ -392,14 +392,14 @@ public class TicketContract : SmartContract
         public Address Address;
 
         /// <summary>
-        /// The ticket secret
+        /// The encrypted ticket secret
         /// </summary>
-        public string Secret;
+        public byte[] Secret;
 
         /// <summary>
-        /// Used by the venue to check identity
+        /// Encrypted identifier used by the venue to check identity
         /// </summary>
-        public string CustomerIdentifier;
+        public byte[] CustomerIdentifier;
     }
 
     /// <summary>
