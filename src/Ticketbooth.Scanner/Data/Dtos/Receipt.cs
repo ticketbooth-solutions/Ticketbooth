@@ -1,8 +1,11 @@
 ﻿namespace Ticketbooth.Scanner.Data.Dtos
 {
-    public class Receipt<T>
+    public class Receipt<TValue, TLog>
     {
+        public string BlockHash { get; set; }
 
-        public T ReturnValue { get; set; }
+        public TValue ReturnValue { get; set; }
+
+        public LogDto<TLog>[] Logs { get; set; }
     }
 }

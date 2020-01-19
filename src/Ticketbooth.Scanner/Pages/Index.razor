@@ -89,7 +89,7 @@
 
     private void ViewDetails(TicketScanModel scanResult)
     {
-        _navigationManager.NavigateTo($"details/{scanResult.TransactionHash}");
+        _navigationManager.NavigateTo($"details/{scanResult.Identifier}");
     }
 
     public void Dispose()

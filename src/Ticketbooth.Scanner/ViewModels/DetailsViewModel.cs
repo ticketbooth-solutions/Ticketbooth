@@ -15,7 +15,7 @@ namespace Ticketbooth.Scanner.ViewModels
         private readonly IMessageHub _eventAggregator;
         private readonly ITicketRepository _ticketRepository;
 
-        private string _hash;
+        private string _identifier;
         private Guid _ticketScanUpdatedSubscription;
 
         public DetailsViewModel(IMessageHub eventAggregator, ITicketRepository ticketRepository)
@@ -24,7 +24,7 @@ namespace Ticketbooth.Scanner.ViewModels
             _ticketRepository = ticketRepository;
         }
 
-        public TicketScanModel Result => _ticketRepository.Find(_hash);
+        public TicketScanModel Result => _ticketRepository.Find(_identifier);
 
         public string Message =>
             Result is null ? "How did I get here?"
@@ -33,23 +33,23 @@ namespace Ticketbooth.Scanner.ViewModels
             : Result.OwnsTicket ? $"Seat {Result?.Seat.Number}{Result?.Seat.Letter}" : "Invalid ticket";
 
         public string MessageDetail =>
-            Result?.Status == TicketScanStatus.Faulted ? "Ticket scan timed out"
+            Result?.Status == TicketScanStatus.Faulted ? "Invalid ticket data"
             : Result?.Status == TicketScanStatus.Completed && Result.OwnsTicket ? Result.Name
             : null;
 
-        public void RetrieveTicketScan(string hash)
+        public void RetrieveTicketScan(string identifier)
         {
-            if (!(_hash is null))
+            if (!(_identifier is null))
             {
                 throw new InvalidOperationException("Already retrieved ticket scan");
             }
 
-            if (hash is null)
+            if (identifier is null)
             {
-                throw new ArgumentNullException(nameof(hash), "Hash cannot be null");
+                throw new ArgumentNullException(nameof(identifier), "Identifier cannot be null");
             }
 
-            _hash = hash;
+            _identifier = identifier;
 
             if (Result?.Status == TicketScanStatus.Started)
             {

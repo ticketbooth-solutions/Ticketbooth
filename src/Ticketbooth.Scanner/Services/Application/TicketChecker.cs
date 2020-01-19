@@ -1,45 +1,81 @@
 ﻿using Microsoft.Extensions.Logging;
+using SmartContract.Essentials.Ciphering;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
 using Ticketbooth.Scanner.Data.Dtos;
-using Ticketbooth.Scanner.Services.Infrastructure;
+using Ticketbooth.Scanner.Messaging.Data;
+using static TicketContract;
 
 namespace Ticketbooth.Scanner.Services.Application
 {
     public class TicketChecker : ITicketChecker
     {
+        private readonly ICipherFactory _cipherFactory;
         private readonly ILogger<TicketChecker> _logger;
-        private readonly ITicketService _ticketService;
 
-        public TicketChecker(ILogger<TicketChecker> logger, ITicketService ticketService)
+        public TicketChecker(ICipherFactory cipherFactory, ILogger<TicketChecker> logger)
         {
+            _cipherFactory = cipherFactory;
             _logger = logger;
-            _ticketService = ticketService;
         }
 
-        public async Task<string> PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken)
+        public TicketScanResult CheckTicket(DigitalTicket scannedTicket, Ticket actualTicket)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            if (scannedTicket is null)
             {
-                var checkReservationResponse = await _ticketService.CheckReservationAsync(ticket.Seat, ticket.Address);
-                if (checkReservationResponse is null)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(.5));
-                }
-                else if (checkReservationResponse.Success)
-                {
-                    return checkReservationResponse.TransactionId;
-                }
-                else
-                {
-                    _logger.LogError($"Error when building smart contract call: {checkReservationResponse.Message}");
-                    return null;
-                }
+                throw new ArgumentNullException(nameof(scannedTicket), "Cannot check null ticket");
             }
 
-            _logger.LogError($"Ticket check timed out for seat {ticket.Seat.Number}{ticket.Seat.Letter}.");
-            return null;
+            if (!scannedTicket.Seat.Equals(actualTicket.Seat))
+            {
+                throw new ArgumentException(nameof(actualTicket), "Seats do not match");
+            }
+
+            string plainTextSecret;
+            try
+            {
+                using var cbc = _cipherFactory.CreateCbcProvider();
+                plainTextSecret = cbc.Decrypt(actualTicket.Secret, scannedTicket.SecretKey, scannedTicket.SecretIV);
+            }
+            catch (CryptographicException e)
+            {
+                _logger.LogDebug(e.Message);
+                return new TicketScanResult(false, string.Empty);
+            }
+            catch (ArgumentException e)
+            {
+                _logger.LogWarning(e.Message);
+                return null;
+            }
+
+            if (plainTextSecret is null || !plainTextSecret.Equals(scannedTicket.Secret))
+            {
+                return new TicketScanResult(false, string.Empty);
+            }
+
+            if (actualTicket.CustomerIdentifier is null)
+            {
+                return new TicketScanResult(true, string.Empty);
+            }
+
+            string plainTextCustomerIdentifier;
+            try
+            {
+                using var aes = _cipherFactory.CreateCbcProvider();
+                plainTextCustomerIdentifier = aes.Decrypt(actualTicket.CustomerIdentifier, scannedTicket.NameKey, scannedTicket.NameIV);
+            }
+            catch (CryptographicException e)
+            {
+                _logger.LogDebug(e.Message);
+                return new TicketScanResult(true, string.Empty);
+            }
+            catch (ArgumentException e)
+            {
+                _logger.LogWarning(e.Message);
+                return null;
+            }
+
+            return new TicketScanResult(true, plainTextCustomerIdentifier);
         }
     }
 }

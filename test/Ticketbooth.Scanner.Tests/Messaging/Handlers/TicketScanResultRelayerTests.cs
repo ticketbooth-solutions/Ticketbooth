@@ -30,12 +30,12 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
         public async Task Handle_TicketScanNotFound_NoEventPublished()
         {
             // Arrange
-            var transactionHash = "d389jqwjfiok4mtktnwl_d3uifn3";
+            var identifier = "09__blOoQm72n8Bf";
             var ticketScanResult = null as TicketScanResult;
             var ticketScanModel = null as TicketScanModel;
-            var notification = new TicketScanResultNotification(transactionHash, ticketScanResult);
+            var notification = new TicketScanResultNotification(identifier, ticketScanResult);
 
-            _ticketRepository.Setup(callTo => callTo.Find(transactionHash)).Returns(ticketScanModel);
+            _ticketRepository.Setup(callTo => callTo.Find(identifier)).Returns(ticketScanModel);
 
             // Act
             await _ticketScanRelayer.Handle(notification, default);
@@ -48,36 +48,36 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
         public async Task Handle_TicketScanNullResult_EventPublished()
         {
             // Arrange
-            var transactionHash = "d389jqwjfiok4mtktnwl_d3uifn3";
+            var identifier = "09__blOoQm72n8Bf";
             var ticketScanResult = null as TicketScanResult;
-            var ticketScanModel = new TicketScanModel(transactionHash, new SeatModel(5, 'D'));
-            var notification = new TicketScanResultNotification(transactionHash, ticketScanResult);
+            var ticketScanModel = new TicketScanModel(identifier, new SeatModel(5, 'D'));
+            var notification = new TicketScanResultNotification(identifier, ticketScanResult);
 
-            _ticketRepository.Setup(callTo => callTo.Find(transactionHash)).Returns(ticketScanModel);
+            _ticketRepository.Setup(callTo => callTo.Find(identifier)).Returns(ticketScanModel);
 
             // Act
             await _ticketScanRelayer.Handle(notification, default);
 
             // Assert
-            _eventAggregator.Verify(callTo => callTo.Publish(It.Is<TicketScanUpdated>(message => message.TransactionHash.Equals(transactionHash))), Times.Once);
+            _eventAggregator.Verify(callTo => callTo.Publish(It.Is<TicketScanUpdated>(message => message.Identifier.Equals(identifier))), Times.Once);
         }
 
         [Test]
         public async Task Handle_TicketScanValueResult_EventPublished()
         {
             // Arrange
-            var transactionHash = "d389jqwjfiok4mtktnwl_d3uifn3";
+            var identifier = "09__blOoQm72n8Bf";
             var ticketScanResult = new TicketScanResult(true, "Benjamin Rich Swift");
-            var ticketScanModel = new TicketScanModel(transactionHash, new SeatModel(5, 'D'));
-            var notification = new TicketScanResultNotification(transactionHash, ticketScanResult);
+            var ticketScanModel = new TicketScanModel(identifier, new SeatModel(5, 'D'));
+            var notification = new TicketScanResultNotification(identifier, ticketScanResult);
 
-            _ticketRepository.Setup(callTo => callTo.Find(transactionHash)).Returns(ticketScanModel);
+            _ticketRepository.Setup(callTo => callTo.Find(identifier)).Returns(ticketScanModel);
 
             // Act
             await _ticketScanRelayer.Handle(notification, default);
 
             // Assert
-            _eventAggregator.Verify(callTo => callTo.Publish(It.Is<TicketScanUpdated>(message => message.TransactionHash.Equals(transactionHash))), Times.Once);
+            _eventAggregator.Verify(callTo => callTo.Publish(It.Is<TicketScanUpdated>(message => message.Identifier.Equals(identifier))), Times.Once);
         }
     }
 }

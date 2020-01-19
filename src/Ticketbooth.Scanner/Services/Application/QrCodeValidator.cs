@@ -2,12 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Ticketbooth.Scanner.Data.Dtos;
-using Ticketbooth.Scanner.Messaging.Notifications;
+using Ticketbooth.Scanner.Messaging.Requests;
 
 namespace Ticketbooth.Scanner.Services.Application
 {
@@ -17,19 +15,18 @@ namespace Ticketbooth.Scanner.Services.Application
 
         private readonly ILogger<QrCodeValidator> _logger;
         private readonly IMediator _mediator;
-        private readonly ITicketChecker _ticketChecker;
 
-        public QrCodeValidator(ILogger<QrCodeValidator> logger, IMediator mediator, ITicketChecker ticketChecker)
+        public QrCodeValidator(ILogger<QrCodeValidator> logger, IMediator mediator)
         {
             _logger = logger;
             _mediator = mediator;
-            _ticketChecker = ticketChecker;
         }
 
         public async Task Validate(string qrCodeData)
         {
             if (string.IsNullOrWhiteSpace(qrCodeData))
             {
+                _logger.LogDebug("QR code data empty");
                 return;
             }
 
@@ -38,35 +35,21 @@ namespace Ticketbooth.Scanner.Services.Application
                 var tickets = JsonConvert.DeserializeObject<DigitalTicket[]>(qrCodeData);
                 if (tickets is null || !tickets.Any())
                 {
+                    _logger.LogDebug("No tickets specified");
                     return;
                 }
 
-                var ticketCheckTransactions = new Dictionary<string, DigitalTicket>();
-                var ticketChecks = await Task.WhenAll(tickets.Select(async ticket =>
-                {
-                    var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                    var result = await _ticketChecker.PerformTicketCheckAsync(ticket, cancellationTokenSource.Token);
-                    if (!(result is null))
-                    {
-                        ticketCheckTransactions.Add(result, ticket);
-                    }
-                    return result;
-                }).ToArray());
-
-                if (ticketCheckTransactions.Any())
-                {
-                    OnValidQrCode?.Invoke(this, null);
-                    _logger.LogInformation("Begun processing ticket check transacions");
-                    var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                    await Task.WhenAll(ticketCheckTransactions
-                        .Select(transaction => _mediator.Publish(
-                            new TicketScanStartedNotification(transaction.Key, transaction.Value.Seat), cancellationTokenSource.Token)));
-                }
+                OnValidQrCode?.Invoke(this, null);
+                _logger.LogInformation("Begun processing ticket check transacions");
+                await _mediator.Send(new TicketScanRequest(tickets));
             }
             catch (JsonException e)
             {
                 _logger.LogWarning(e.Message);
-                return;
+            }
+            catch (FormatException e)
+            {
+                _logger.LogWarning(e.Message);
             }
         }
     }

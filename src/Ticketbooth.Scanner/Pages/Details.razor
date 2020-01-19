@@ -1,4 +1,4 @@
-﻿@page "/details/{hash}"
+﻿@page "/details/{identifier}"
 
 @implements IDisposable
 
@@ -55,7 +55,7 @@ else
 
 @code {
     [Parameter]
-    public string Hash { get; set; }
+    public string Identifier { get; set; }
 
     protected override void OnInitialized()
     {
@@ -64,7 +64,7 @@ else
 
     protected override void OnParametersSet()
     {
-        _detailsViewModel.RetrieveTicketScan(Hash);
+        _detailsViewModel.RetrieveTicketScan(Identifier);
     }
 
     public void Dispose()

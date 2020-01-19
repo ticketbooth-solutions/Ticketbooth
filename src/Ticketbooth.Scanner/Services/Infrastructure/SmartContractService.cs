@@ -21,16 +21,16 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
             _logger = logger;
         }
 
-        private IFlurlRequest BaseRequest =>
+        private Url BaseRequest =>
             new Url(_configuration["Stratis:FullNodeApi"])
-                .AppendPathSegments("api", "SmartContracts")
-                .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK, HttpStatusCode.BadRequest });
+                .AppendPathSegments("api", "SmartContracts");
 
-        public async Task<Receipt<T>> FetchReceiptAsync<T>(string transactionHash)
+        public async Task<Receipt<TValue, object>> FetchReceiptAsync<TValue>(string transactionHash)
         {
             try
             {
                 var response = await BaseRequest
+                    .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK, HttpStatusCode.BadRequest })
                     .AppendPathSegment("receipt")
                     .SetQueryParam("txHash", transactionHash)
                     .GetAsync();
@@ -41,7 +41,33 @@ namespace Ticketbooth.Scanner.Services.Infrastructure
                 }
 
                 var receiptString = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<Receipt<T>>(receiptString);
+                return JsonConvert.DeserializeObject<Receipt<TValue, object>>(receiptString);
+            }
+            catch (FlurlHttpException e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+            catch (JsonException e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+        }
+
+        public async Task<Receipt<object, TLog>[]> FetchReceiptsAsync<TLog>() where TLog : struct
+        {
+            try
+            {
+                var response = await BaseRequest
+                    .AllowHttpStatus(new HttpStatusCode[] { HttpStatusCode.OK })
+                    .AppendPathSegment("receipt-search")
+                    .SetQueryParam("contractAddress", _configuration["ContractAddress"])
+                    .SetQueryParam("eventName", typeof(TLog).Name)
+                    .GetAsync();
+
+                var receiptString = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<Receipt<object, TLog>[]>(receiptString);
             }
             catch (FlurlHttpException e)
             {

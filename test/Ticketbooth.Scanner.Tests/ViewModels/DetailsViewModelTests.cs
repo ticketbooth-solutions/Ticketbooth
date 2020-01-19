@@ -29,33 +29,33 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
             _ticketRepository.Setup(callTo => callTo.Add(It.IsAny<TicketScanModel>()))
                 .Callback(new Action<TicketScanModel>(ticketScan => _ticketScans.Add(ticketScan)));
             _ticketRepository.Setup(callTo => callTo.Find(It.IsAny<string>()))
-                .Returns<string>(key => _ticketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(key)));
+                .Returns<string>(key => _ticketScans.FirstOrDefault(ticketScan => ticketScan.Identifier.Equals(key)));
 
             _detailsViewModel = new DetailsViewModel(_eventAggregator, _ticketRepository.Object);
         }
 
         [Test]
-        public void RetrieveTicketScan_HashNull_ThrowsArgumentNullException()
+        public void RetrieveTicketScan_IdentifierNull_ThrowsArgumentNullException()
         {
             // Arrange
-            var hash = (string)null;
+            var identifier = (string)null;
 
             // Act
-            var retrieveTicketScanCall = new Action(() => _detailsViewModel.RetrieveTicketScan(hash));
+            var retrieveTicketScanCall = new Action(() => _detailsViewModel.RetrieveTicketScan(identifier));
 
             // Assert
             Assert.That(retrieveTicketScanCall, Throws.Exception.TypeOf<ArgumentNullException>());
         }
 
         [Test]
-        public void RetrieveTicketScan_HashValidCalledTwice_ThrowsInvalidOperationException()
+        public void RetrieveTicketScan_IdentifierValidCalledTwice_ThrowsInvalidOperationException()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
-            _detailsViewModel.RetrieveTicketScan(hash);
+            var identifier = "09__blOoQm72n8Bf";
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Act
-            var retrieveTicketScanCall = new Action(() => _detailsViewModel.RetrieveTicketScan(hash));
+            var retrieveTicketScanCall = new Action(() => _detailsViewModel.RetrieveTicketScan(identifier));
 
             // Assert
             Assert.That(retrieveTicketScanCall, Throws.Exception.TypeOf<InvalidOperationException>());
@@ -65,10 +65,10 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void RetrieveTicketScan_TicketScanDoesNotExist_ResultIsNotSet()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
+            var identifier = "09__blOoQm72n8Bf";
 
             // Act
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Assert
             Assert.That(_detailsViewModel.Result, Is.Null);
@@ -78,12 +78,12 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void RetrieveTicketScan_TicketScanExists_ResultIsSet()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
-            var ticketScan = new TicketScanModel(hash, new SeatModel { Number = 1, Letter = 'C' });
+            var identifier = "09__blOoQm72n8Bf";
+            var ticketScan = new TicketScanModel(identifier, new SeatModel { Number = 1, Letter = 'C' });
             _ticketScans.Add(ticketScan);
 
             // Act
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Assert
             Assert.That(_detailsViewModel.Result, Is.EqualTo(ticketScan));
@@ -94,15 +94,15 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         {
             // Arrange
             var eventRaised = false;
-            var hash = "fre8hrwhruihfjgb4iugnrj";
-            var ticketScan = new TicketScanModel(hash, new SeatModel { Number = 1, Letter = 'C' });
+            var identifier = "09__blOoQm72n8Bf";
+            var ticketScan = new TicketScanModel(identifier, new SeatModel { Number = 1, Letter = 'C' });
             _ticketScans.Add(ticketScan);
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             _detailsViewModel.OnPropertyChanged += (s, e) => { eventRaised = true; };
 
             // Act
-            _eventAggregator.Publish(new TicketScanUpdated(hash));
+            _eventAggregator.Publish(new TicketScanUpdated(identifier));
 
             // Assert
             Assert.That(eventRaised, Is.True);
@@ -114,10 +114,10 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void RetrieveTicketScan_DoesNotExist_MessageDetailNull()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
+            var identifier = "09__blOoQm72n8Bf";
 
             // Act
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Assert
             Assert.That(_detailsViewModel.MessageDetail, Is.Null);
@@ -127,12 +127,12 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void RetrieveTicketScan_StatusStarted_MessageDetailNull()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
-            var ticketScan = new TicketScanModel(hash, new SeatModel { Number = 1, Letter = 'C' });
+            var identifier = "09__blOoQm72n8Bf";
+            var ticketScan = new TicketScanModel(identifier, new SeatModel { Number = 1, Letter = 'C' });
             _ticketScans.Add(ticketScan);
 
             // Act
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Assert
             Assert.That(_detailsViewModel.MessageDetail, Is.Null);
@@ -142,14 +142,14 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void RetrieveTicketScan_StatusCompletedDoesNotOwnTicket_MessageDetailNull()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
-            var ticketScan = new TicketScanModel(hash, new SeatModel { Number = 1, Letter = 'C' });
+            var identifier = "09__blOoQm72n8Bf";
+            var ticketScan = new TicketScanModel(identifier, new SeatModel { Number = 1, Letter = 'C' });
             var name = "Benjamin Rich Swift";
             ticketScan.SetScanResult(false, name);
             _ticketScans.Add(ticketScan);
 
             // Act
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Assert
             Assert.That(_detailsViewModel.MessageDetail, Is.Null);
@@ -159,14 +159,14 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void RetrieveTicketScan_StatusCompletedOwnsTicket_MessageDetailSetToName()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
-            var ticketScan = new TicketScanModel(hash, new SeatModel { Number = 1, Letter = 'C' });
+            var identifier = "09__blOoQm72n8Bf";
+            var ticketScan = new TicketScanModel(identifier, new SeatModel { Number = 1, Letter = 'C' });
             var name = "Benjamin Rich Swift";
             ticketScan.SetScanResult(true, name);
             _ticketScans.Add(ticketScan);
 
             // Act
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Assert
             Assert.That(_detailsViewModel.MessageDetail, Is.EqualTo(name));
@@ -176,13 +176,13 @@ namespace Ticketbooth.Scanner.Tests.ViewModels
         public void RetrieveTicketScan_StatusFaulted_MessageDetailSet()
         {
             // Arrange
-            var hash = "fre8hrwhruihfjgb4iugnrj";
-            var ticketScan = new TicketScanModel(hash, new SeatModel { Number = 1, Letter = 'C' });
+            var identifier = "09__blOoQm72n8Bf";
+            var ticketScan = new TicketScanModel(identifier, new SeatModel { Number = 1, Letter = 'C' });
             ticketScan.SetFaulted();
             _ticketScans.Add(ticketScan);
 
             // Act
-            _detailsViewModel.RetrieveTicketScan(hash);
+            _detailsViewModel.RetrieveTicketScan(identifier);
 
             // Assert
             Assert.That(_detailsViewModel.MessageDetail, Is.Not.Null);

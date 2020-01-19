@@ -5,13 +5,13 @@ namespace Ticketbooth.Scanner.Messaging.Notifications
 {
     public class TicketScanStartedNotification : INotification
     {
-        public TicketScanStartedNotification(string transactionHash, Seat seat)
+        public TicketScanStartedNotification(string identifier, Seat seat)
         {
-            TransactionHash = transactionHash;
+            Identifier = identifier;
             Seat = seat;
         }
 
-        public string TransactionHash { get; }
+        public string Identifier { get; }
 
         public Seat Seat { get; }
     }

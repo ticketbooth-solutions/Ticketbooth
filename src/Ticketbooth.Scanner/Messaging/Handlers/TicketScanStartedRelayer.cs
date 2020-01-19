@@ -26,9 +26,9 @@ namespace Ticketbooth.Scanner.Messaging.Handlers
         public Task Handle(TicketScanStartedNotification notification, CancellationToken cancellationToken)
         {
             var seat = new SeatModel(notification.Seat.Number, notification.Seat.Letter);
-            _ticketRepository.Add(new TicketScanModel(notification.TransactionHash, seat));
-            _eventAggregator.Publish(new TicketScanAdded(notification.TransactionHash));
-            _logger.LogDebug($"Published {nameof(TicketScanAdded)} event for transaction {notification.TransactionHash}");
+            _ticketRepository.Add(new TicketScanModel(notification.Identifier, seat));
+            _eventAggregator.Publish(new TicketScanAdded(notification.Identifier));
+            _logger.LogDebug($"Published {nameof(TicketScanAdded)} event for transaction {notification.Identifier}");
             return Task.CompletedTask;
         }
     }

@@ -27,9 +27,9 @@ namespace Ticketbooth.Scanner.Data
             _ticketScans.Enqueue(ticketScan);
         }
 
-        public TicketScanModel Find(string key)
+        public TicketScanModel Find(string identifier)
         {
-            return _ticketScans.FirstOrDefault(ticketScan => ticketScan.TransactionHash.Equals(key));
+            return _ticketScans.FirstOrDefault(ticketScan => ticketScan.Identifier.Equals(identifier));
         }
     }
 }

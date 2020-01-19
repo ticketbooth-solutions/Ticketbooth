@@ -14,9 +14,10 @@
     <PackageReference Include="MediatR" Version="8.0.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" />
+    <PackageReference Include="SmartContract.Essentials" Version="1.0.2" />
     <PackageReference Include="Stratis.Sidechains.Networks" Version="1.0.2" />
     <PackageReference Include="Stratis.SmartContracts.CLR" Version="1.0.2" />
-    <PackageReference Include="Ticketbooth" Version="1.0.0-rc1" />
+    <PackageReference Include="Ticketbooth" Version="1.0.0-rc3" />
   </ItemGroup>
 
 </Project>
