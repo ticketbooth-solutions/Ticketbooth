@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <LangVersion>6.0</LangVersion>
+    <LangVersion>7.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Company>Develop Momentum</Company>
@@ -16,6 +16,7 @@
     <PackageTags>blockchain stratis ticketing smart-contracts ticketbooth</PackageTags>
     <Version>1.0.0</Version>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="Stratis.SmartContracts" Version="1.2.1" />
   </ItemGroup>
