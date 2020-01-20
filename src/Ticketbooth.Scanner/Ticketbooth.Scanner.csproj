@@ -17,7 +17,7 @@
     <PackageReference Include="SmartContract.Essentials" Version="1.0.2" />
     <PackageReference Include="Stratis.Sidechains.Networks" Version="1.0.2" />
     <PackageReference Include="Stratis.SmartContracts.CLR" Version="1.0.2" />
-    <PackageReference Include="Ticketbooth" Version="1.0.0-rc3" />
+    <PackageReference Include="Ticketbooth" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

@@ -3,16 +3,18 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <LangVersion>6.0</LangVersion>
-    <Company>Develop Momentum</Company>
-    <Authors>Adam Shirt</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>1.0.0-rc3</Version>
+    <Company>Develop Momentum</Company>
+    <Authors>Adam Shirt</Authors>
     <PackageId>Ticketbooth</PackageId>
+    <Description>Components of the Ticketbooth smart contract</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/drmathias/Ticketbooth</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Description>Structures used in the Ticketbooth contract</Description>
+    <Product>Ticketbooth</Product>
+    <PackageTags>blockchain stratis ticketing smart-contracts ticketbooth</PackageTags>
+    <Version>1.0.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Stratis.SmartContracts" Version="1.2.1" />
