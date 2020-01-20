@@ -15,7 +15,6 @@ namespace Ticketbooth.Scanner.Services.Application
         {
             "Stratis.Bitcoin.Base.BaseFeature",
             "Stratis.Bitcoin.Features.SmartContracts.SmartContractFeature",
-            "Stratis.Bitcoin.Features.SmartContracts.Wallet.SmartContractWalletFeature",
             "Stratis.Bitcoin.Features.Api.ApiFeature"
         };
 

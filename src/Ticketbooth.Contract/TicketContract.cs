@@ -190,33 +190,25 @@ public class TicketContract : SmartContract
     /// Reserves a ticket for the callers address
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
+    /// <param name="secret">The encrypted secret holding ticket ownership</param>
     /// <returns>Whether the seat was successfully reserved</returns>
-    public bool Reserve(byte[] seatIdentifierBytes)
+    public void Reserve(byte[] seatIdentifierBytes, byte[] secret)
     {
-        return Reserve(seatIdentifierBytes, string.Empty);
+        Reserve(seatIdentifierBytes, secret, null);
     }
 
     /// <summary>
     /// Reserves a ticket for the callers address and with an identifier for the customer
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
-    /// <param name="customerIdentifier">A verifiable identifier for the customer</param>
+    /// <param name="secret">The encrypted secret holding ticket ownership</param>
+    /// <param name="customerIdentifier">An encrypted verifiable identifier for the customer</param>
     /// <returns>Whether the seat was successfully reserved</returns>
-    public bool Reserve(byte[] seatIdentifierBytes, string customerIdentifier)
+    public void Reserve(byte[] seatIdentifierBytes, byte[] secret, byte[] customerIdentifier)
     {
-        // no identity
-        if (RequireIdentityVerification && string.IsNullOrWhiteSpace(customerIdentifier))
-        {
-            Refund(Message.Value);
-            Assert(false, "Customer identifier is required");
-        }
-
-        // sale closed
-        if (!SaleOpen)
-        {
-            Refund(Message.Value);
-            Assert(false, "Sale not open");
-        }
+        Assert(secret != null, "Invalid secret");
+        Assert(!RequireIdentityVerification || customerIdentifier != null, "Invalid customer identifier");
+        Assert(SaleOpen, "Sale not open");
 
         var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
         var copyOfTickets = Tickets;
@@ -232,57 +224,21 @@ public class TicketContract : SmartContract
             }
         }
 
-        // seat not found
-        if (IsDefaultSeat(ticket.Seat))
-        {
-            Refund(Message.Value);
-            Assert(false, "Seat not found");
-        }
-
-        // already reserved
-        if (!IsAvailable(ticket))
-        {
-            Refund(Message.Value);
-            return false;
-        }
-
-        // not enough funds
-        if (Message.Value < ticket.Price)
-        {
-            Refund(Message.Value);
-            return false;
-        }
+        Assert(!IsDefaultSeat(ticket.Seat), "Seat not found");
+        Assert(IsAvailable(ticket), "Ticket not available");
+        Assert(Message.Value >= ticket.Price, "Not enough funds");
 
         if (Message.Value > ticket.Price)
         {
-            Refund(Message.Value - ticket.Price);
+            Transfer(Message.Sender, Message.Value - ticket.Price);
         }
 
         copyOfTickets[ticketIndex].Address = Message.Sender;
+        copyOfTickets[ticketIndex].Secret = secret;
         copyOfTickets[ticketIndex].CustomerIdentifier = customerIdentifier;
         Tickets = copyOfTickets;
-        return true;
-    }
 
-    /// <summary>
-    /// Used to verify whether an address owns a ticket
-    /// </summary>
-    /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
-    /// <param name="address">The address to verify</param>
-    /// <returns>The result of the reservation query</returns>
-    public ReservationQueryResult CheckReservation(byte[] seatIdentifierBytes, Address address)
-    {
-        Assert(address != Address.Zero, "Invalid address");
-
-        var ticket = SelectTicket(seatIdentifierBytes);
-
-        Assert(!IsDefaultSeat(ticket.Seat), "Seat not found");
-
-        return new ReservationQueryResult
-        {
-            OwnsTicket = address == ticket.Address,
-            CustomerIdentifier = ticket.CustomerIdentifier
-        };
+        Log(copyOfTickets[ticketIndex]);
     }
 
     /// <summary>
@@ -346,28 +302,15 @@ public class TicketContract : SmartContract
 
         if (ticket.Price > ReleaseFee)
         {
-            TryTransfer(Message.Sender, ticket.Price - ReleaseFee);
+            Transfer(Message.Sender, ticket.Price - ReleaseFee);
         }
+
         copyOfTickets[ticketIndex].Address = Address.Zero;
+        copyOfTickets[ticketIndex].Secret = null;
         copyOfTickets[ticketIndex].CustomerIdentifier = null;
         Tickets = copyOfTickets;
-    }
 
-    private bool Refund(ulong amount)
-    {
-        Assert(amount <= Message.Value, "Invalid refund value");
-        return TryTransfer(Message.Sender, amount);
-    }
-
-    private bool TryTransfer(Address recipient, ulong amount)
-    {
-        if (amount > 0)
-        {
-            var transferResult = Transfer(recipient, amount);
-            return transferResult.Success;
-        }
-
-        return false;
+        Log(copyOfTickets[ticketIndex]);
     }
 
     private Ticket SelectTicket(byte[] seatIdentifierBytes)
@@ -403,9 +346,10 @@ public class TicketContract : SmartContract
     {
         for (int i = 0; i < tickets.Length; i++)
         {
-            tickets[i].Address = Address.Zero;
             tickets[i].Price = 0;
-            tickets[i].CustomerIdentifier = string.Empty;
+            tickets[i].Address = Address.Zero;
+            tickets[i].Secret = null;
+            tickets[i].CustomerIdentifier = null;
         }
 
         return tickets;
@@ -448,9 +392,14 @@ public class TicketContract : SmartContract
         public Address Address;
 
         /// <summary>
-        /// Used by the venue to check identity
+        /// The encrypted ticket secret
         /// </summary>
-        public string CustomerIdentifier;
+        public byte[] Secret;
+
+        /// <summary>
+        /// Encrypted identifier used by the venue to check identity
+        /// </summary>
+        public byte[] CustomerIdentifier;
     }
 
     /// <summary>
@@ -462,11 +411,6 @@ public class TicketContract : SmartContract
         /// Name of the venue
         /// </summary>
         public string Name;
-
-        /// <summary>
-        /// Whether the venue requires identity verification on the door
-        /// </summary>
-        public bool VerifiesIdentity;
     }
 
     /// <summary>
@@ -526,21 +470,5 @@ public class TicketContract : SmartContract
         /// Whether the venue requires identity verification
         /// </summary>
         public bool RequireIdentityVerification;
-    }
-
-    /// <summary>
-    /// The ticket reservation query result
-    /// </summary>
-    public struct ReservationQueryResult
-    {
-        /// <summary>
-        /// Whether the ticket is owned by the Address
-        /// </summary>
-        public bool OwnsTicket;
-
-        /// <summary>
-        /// A verifiable identifier for the ticket holder
-        /// </summary>
-        public string CustomerIdentifier;
     }
 }

@@ -9,6 +9,6 @@ namespace Ticketbooth.Scanner.Data
 
         void Add(TicketScanModel ticketScan);
 
-        TicketScanModel Find(string key);
+        TicketScanModel Find(string identifier);
     }
 }

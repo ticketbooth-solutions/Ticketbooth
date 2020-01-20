@@ -30,16 +30,16 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
         public async Task Handle_TicketScanStartedNotification_AddedToRepository()
         {
             // Arrange
-            var transactionHash = "d389jqwjfiok4mtktnwl_d3uifn3";
+            var identifier = "09__blOoQm72n8Bf";
             var seat = new Seat { Number = 2, Letter = 'D' };
-            var notification = new TicketScanStartedNotification(transactionHash, seat);
+            var notification = new TicketScanStartedNotification(identifier, seat);
 
             // Act
             await _ticketScanRelayer.Handle(notification, default);
 
             // Assert
             _ticketRepository.Verify(
-                callTo => callTo.Add(It.Is<TicketScanModel>(ticketScan => ticketScan.TransactionHash.Equals(transactionHash)
+                callTo => callTo.Add(It.Is<TicketScanModel>(ticketScan => ticketScan.Identifier.Equals(identifier)
                     && ticketScan.Seat.Number == seat.Number && ticketScan.Seat.Letter == seat.Letter)),
                 Times.Once);
         }
@@ -48,15 +48,15 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
         public async Task Handle_TicketScanStartedNotification_EventPublished()
         {
             // Arrange
-            var transactionHash = "d389jqwjfiok4mtktnwl_d3uifn3";
+            var identifier = "09__blOoQm72n8Bf";
             var seat = new Seat { Number = 2, Letter = 'D' };
-            var notification = new TicketScanStartedNotification(transactionHash, seat);
+            var notification = new TicketScanStartedNotification(identifier, seat);
 
             // Act
             await _ticketScanRelayer.Handle(notification, default);
 
             // Assert
-            _eventAggregator.Verify(callTo => callTo.Publish(It.Is<TicketScanAdded>(message => message.TransactionHash.EndsWith(transactionHash))), Times.Once);
+            _eventAggregator.Verify(callTo => callTo.Publish(It.Is<TicketScanAdded>(message => message.Identifier.EndsWith(identifier))), Times.Once);
         }
     }
 }

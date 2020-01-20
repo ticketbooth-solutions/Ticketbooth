@@ -10,7 +10,8 @@ Ticketbooth can be integrated with payment gateways, ticket sales platforms and 
 
 ### Ticketbooth.Contract
 
-[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Contract?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=master)
+[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Contract?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=master) 
+[![Nuget](https://img.shields.io/nuget/v/Ticketbooth)](https://www.nuget.org/packages/Ticketbooth/)
 
 This project contains the smart contract(s) that Ticketbooth is based on.
 

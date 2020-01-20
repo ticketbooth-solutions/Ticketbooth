@@ -2,11 +2,11 @@
 {
     public class TicketScanUpdated
     {
-        public TicketScanUpdated(string transactionHash)
+        public TicketScanUpdated(string identifier)
         {
-            TransactionHash = transactionHash;
+            Identifier = identifier;
         }
 
-        public string TransactionHash { get; }
+        public string Identifier { get; }
     }
 }

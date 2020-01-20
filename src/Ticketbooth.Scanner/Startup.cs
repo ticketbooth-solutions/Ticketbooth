@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using SmartContract.Essentials.Ciphering;
 using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Serialization;
@@ -44,10 +45,11 @@ namespace Ticketbooth.Scanner
             services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
             services.AddSingleton<ISerializer, Serializer>();
             services.AddSingleton<ITicketRepository, TicketRepository>();
+            services.AddSingleton<IBlockStoreService, BlockStoreService>();
             services.AddSingleton<ISmartContractService, SmartContractService>();
-            services.AddSingleton<ITicketService, TicketService>();
             services.AddSingleton<ITicketChecker, TicketChecker>();
             services.AddSingleton<IMessageHub, MessageHub>();
+            services.AddSingleton<ICipherFactory, AesCipherFactory>();
             services.AddMediatR(config => config.Using<ParallelMediator>().AsSingleton(), Assembly.GetExecutingAssembly());
             services.AddTransient<IQrCodeScanner, QrCodeScanner>();
             services.AddTransient<IQrCodeValidator, QrCodeValidator>();
@@ -59,6 +61,7 @@ namespace Ticketbooth.Scanner
             services.AddRazorPages().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.Converters.Add(new AddressConverter(network));
+                options.SerializerSettings.Converters.Add(new ByteArrayToHexConverter());
                 JsonConvert.DefaultSettings = () => options.SerializerSettings;
             });
 

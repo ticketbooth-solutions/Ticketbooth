@@ -8,15 +8,15 @@ namespace Ticketbooth.Scanner.Data.Models
         {
         }
 
-        public TicketScanModel(string transactionHash, SeatModel seat)
+        public TicketScanModel(string identifier, SeatModel seat)
         {
-            TransactionHash = transactionHash;
+            Identifier = identifier;
             Seat = seat;
             Status = TicketScanStatus.Started;
             Time = DateTime.Now;
         }
 
-        public string TransactionHash { get; set; }
+        public string Identifier { get; }
 
         public SeatModel Seat { get; set; }
 

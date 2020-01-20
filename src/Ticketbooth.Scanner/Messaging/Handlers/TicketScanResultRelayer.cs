@@ -24,7 +24,7 @@ namespace Ticketbooth.Scanner.Messaging.Handlers
 
         public async Task Handle(TicketScanResultNotification notification, CancellationToken cancellationToken)
         {
-            var ticketScan = _ticketRepository.Find(notification.TransactionHash);
+            var ticketScan = _ticketRepository.Find(notification.Identifier);
             if (ticketScan is null)
             {
                 return;
@@ -39,8 +39,8 @@ namespace Ticketbooth.Scanner.Messaging.Handlers
                 ticketScan.SetScanResult(notification.Result.OwnsTicket, notification.Result.Name);
             }
 
-            _eventAggregator.Publish(new TicketScanUpdated(ticketScan.TransactionHash));
-            _logger.LogDebug($"Published {nameof(TicketScanUpdated)} event for transaction {ticketScan.TransactionHash}");
+            _eventAggregator.Publish(new TicketScanUpdated(ticketScan.Identifier));
+            _logger.LogDebug($"Published {nameof(TicketScanUpdated)} event for transaction {ticketScan.Identifier}");
         }
     }
 }

@@ -1,11 +1,11 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Ticketbooth.Scanner.Data.Dtos;
+﻿using Ticketbooth.Scanner.Data.Dtos;
+using Ticketbooth.Scanner.Messaging.Data;
+using static TicketContract;
 
 namespace Ticketbooth.Scanner.Services.Application
 {
     public interface ITicketChecker
     {
-        Task<string> PerformTicketCheckAsync(DigitalTicket ticket, CancellationToken cancellationToken);
+        TicketScanResult CheckTicket(DigitalTicket ticket, Ticket actualTicket);
     }
 }
