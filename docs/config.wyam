@@ -1,0 +1,10 @@
+#recipe Docs
+
+// Customize your settings and add new ones here
+Settings[Keys.Host] = "developer.ticketbooth.solutions";
+Settings[DocsKeys.Title] = "Ticketbooth Developer Hub";
+Settings[DocsKeys.AssemblyFiles] = "**/contracts/**.dll";
+
+#a "**/contracts/Ticketbooth.Contract.dll"
+
+// Add any pipeline customizations here
