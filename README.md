@@ -21,6 +21,12 @@ This project contains the smart contract(s) that Ticketbooth is based on.
 
 A web application allowing venues to scan tickets, built with Blazor.
 
+## Documentation
+
+ [![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Docs?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=12&branchName=master) ![Netlify](https://img.shields.io/netlify/c03dc389-d69c-4203-bd5f-540f145e2896)
+ 
+You can view the live documentation at [https://developer.ticketbooth.solutions](https://developer.ticketbooth.solutions/).  Documentation is generated from the docs folder with [Wyam](https://wyam.io/).
+
 ## Resources
 
 * [Open issues](https://github.com/drmathias/Ticketbooth/issues)
