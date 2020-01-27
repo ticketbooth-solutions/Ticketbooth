@@ -4,6 +4,16 @@
         <name>Ticketbooth</name>
     </assembly>
     <members>
+        <member name="T:TicketContract_1_0_0">
+            <summary>
+            A Stratis smart contract for running ticket sales (Ticketbooth v1.0.0)
+            </summary>
+        </member>
+        <member name="F:TicketContract_1_0_0.MAX_SEATS">
+            <summary>
+            Maximum number of seats, necessary while construction cost is lower than cost to begin a sale
+            </summary>
+        </member>
         <member name="M:TicketContract_1_0_0.#ctor(Stratis.SmartContracts.ISmartContractState,System.Byte[],System.String)">
             <summary>
             Creates a new ticketing contract
