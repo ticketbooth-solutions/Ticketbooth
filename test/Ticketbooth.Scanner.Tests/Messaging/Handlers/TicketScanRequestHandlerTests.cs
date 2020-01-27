@@ -20,6 +20,27 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
 {
     public class TicketScanRequestHandlerTests
     {
+        private static readonly Receipt<object, Show>[] _showReceipts = new Receipt<object, Show>[]
+        {
+            new Receipt<object, Show>
+            {
+                BlockHash = "ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9",
+                Logs = new LogDto<Show>[]
+                {
+                    new LogDto<Show>
+                    {
+                        Log = new Show
+                        {
+                            Name = "Greatest Hits Tour",
+                            Organiser = "Rick Astley",
+                            Time = 1587063600,
+                            EndOfSale = 12000
+                        }
+                    }
+                }
+            }
+        };
+
         private Mock<IBlockStoreService> _blockStoreService;
         private Mock<ILogger<TicketScanRequestHandler>> _logger;
         private Mock<IMediator> _mediator;
@@ -66,11 +87,11 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
             var ticket = new DigitalTicket() { Seat = new Seat { Number = 1, Letter = 'A' } };
             var ticketScanRequest = new TicketScanRequest(ticket);
 
-            var receipts = new Receipt<object, Ticket>[]
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[]
             {
                 new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -88,8 +109,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 }
             };
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
 
             // Act
             await _ticketScanRequestHandler.Handle(ticketScanRequest, default);
@@ -108,12 +131,12 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
             var ticket = new DigitalTicket() { Seat = new Seat { Number = 1, Letter = 'A' } };
             var ticketScanRequest = new TicketScanRequest(ticket);
 
-            var receipts = new Receipt<object, Ticket>[ticketCount];
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[ticketCount];
             for (int i = 0; i < ticketCount; i++)
             {
-                receipts[i] = new Receipt<object, Ticket>
+                ticketTransactionReceipts[i] = new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -131,8 +154,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 };
             }
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
 
             // Act
             await _ticketScanRequestHandler.Handle(ticketScanRequest, default);
@@ -150,11 +175,11 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
             var ticket = new DigitalTicket() { Seat = new Seat { Number = 1, Letter = 'A' } };
             var ticketScanRequest = new TicketScanRequest(ticket);
 
-            var receipts = new Receipt<object, Ticket>[]
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[]
             {
                 new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -172,8 +197,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 }
             };
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
 
             // Act
             await _ticketScanRequestHandler.Handle(ticketScanRequest, default);
@@ -190,12 +217,12 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
             var ticket = new DigitalTicket() { Seat = new Seat { Number = 1, Letter = 'A' } };
             var ticketScanRequest = new TicketScanRequest(ticket);
 
-            var receipts = new Receipt<object, Ticket>[ticketCount];
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[ticketCount];
             for (int i = 0; i < ticketCount; i++)
             {
-                receipts[i] = new Receipt<object, Ticket>
+                ticketTransactionReceipts[i] = new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -213,8 +240,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 };
             }
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
 
             // Act
             await _ticketScanRequestHandler.Handle(ticketScanRequest, default);
@@ -240,11 +269,11 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 CustomerIdentifier = new byte[16]
             };
 
-            var receipts = new Receipt<object, Ticket>[]
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[]
             {
                 new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -255,8 +284,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 }
             };
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
             _ticketChecker.Setup(callTo => callTo.CheckTicket(ticket, ticketTransaction)).Returns(new TicketScanResult(ownsTicket, default));
 
             // Act
@@ -285,11 +316,11 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 CustomerIdentifier = new byte[16]
             };
 
-            var receipts = new Receipt<object, Ticket>[]
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[]
             {
                 new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -300,8 +331,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 }
             };
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
             _ticketChecker.Setup(callTo => callTo.CheckTicket(ticket, ticketTransaction)).Returns(new TicketScanResult(true, name));
 
             // Act
@@ -311,6 +344,48 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
             _mediator.Verify(callTo => callTo.Publish(It.Is<TicketScanResultNotification>(notification => notification.Result.Name.Equals(name)),
                 It.IsAny<CancellationToken>()),
                 Times.Once);
+        }
+
+        [Test]
+        public async Task Handle_OddMatchingTicketTransactionsButNewShowSince_DoesNotCountOldTransactionsAndLogsWarning()
+        {
+            var ticket = new DigitalTicket() { Seat = new Seat { Number = 1, Letter = 'A' } };
+            var ticketScanRequest = new TicketScanRequest(ticket);
+
+            var ticketTransaction = new Ticket
+            {
+                Address = new Address(5, 5, 4, 3, 5),
+                Price = 2490000000,
+                Seat = new Seat { Number = 1, Letter = 'A' },
+                Secret = new byte[16],
+                CustomerIdentifier = new byte[16]
+            };
+
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[]
+            {
+                new Receipt<object, Ticket>
+                {
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
+                    Logs = new LogDto<Ticket>[]
+                    {
+                        new LogDto<Ticket>
+                        {
+                            Log = ticketTransaction
+                        }
+                    }
+                }
+            };
+
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 3 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
+
+            // Act
+            await _ticketScanRequestHandler.Handle(ticketScanRequest, default);
+
+            // Assert
+            _logger.VerifyLog(LogLevel.Warning);
         }
 
         [Test]
@@ -328,11 +403,11 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 CustomerIdentifier = new byte[16]
             };
 
-            var receipts = new Receipt<object, Ticket>[]
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[]
             {
                 new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -343,8 +418,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 }
             };
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
             _ticketChecker.Setup(callTo => callTo.CheckTicket(ticket, ticketTransaction)).Throws<ArgumentException>();
 
             // Act
@@ -369,11 +446,11 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 CustomerIdentifier = new byte[16]
             };
 
-            var receipts = new Receipt<object, Ticket>[]
+            var ticketTransactionReceipts = new Receipt<object, Ticket>[]
             {
                 new Receipt<object, Ticket>
                 {
-                    BlockHash = "ae80111cab8c7e8f932289fdda9a2",
+                    BlockHash = "vZxae80111cab8c7e8f932289fdda9a2",
                     Logs = new LogDto<Ticket>[]
                     {
                         new LogDto<Ticket>
@@ -384,8 +461,10 @@ namespace Ticketbooth.Scanner.Tests.Messaging.Handlers
                 }
             };
 
-            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(receipts));
-            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync(It.IsAny<string>())).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Ticket>()).Returns(Task.FromResult(ticketTransactionReceipts));
+            _smartContractService.Setup(callTo => callTo.FetchReceiptsAsync<Show>()).Returns(Task.FromResult(_showReceipts));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("ks9I72n9Hjj9azM2l9D3Palq2jfBjkb9")).Returns(Task.FromResult(new BlockDto { Height = 1 }));
+            _blockStoreService.Setup(callTo => callTo.GetBlockDataAsync("vZxae80111cab8c7e8f932289fdda9a2")).Returns(Task.FromResult(new BlockDto { Height = 2 }));
             _ticketChecker.Setup(callTo => callTo.CheckTicket(ticket, ticketTransaction)).Throws<Exception>();
 
             // Act
