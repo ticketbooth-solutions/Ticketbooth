@@ -4,6 +4,7 @@
 Settings[Keys.Host] = "developer.ticketbooth.solutions";
 Settings[DocsKeys.Title] = "Ticketbooth Developer Hub";
 Settings[DocsKeys.AssemblyFiles] = "**/contracts/**.dll";
+Settings[DocsKeys.SourceFiles] = "**/articles/**.md";
 
 #a "**/contracts/Ticketbooth.Contract.dll"
 
