@@ -411,12 +411,12 @@ public class TicketContract : SmartContract
         public string Organiser;
 
         /// <summary>
-        /// Unix time of the show
+        /// Unix time (seconds) of the show
         /// </summary>
         public ulong Time;
 
         /// <summary>
-        /// Block at which the sale ends
+        /// Block height at which the sale ends
         /// </summary>
         public ulong EndOfSale;
     }
