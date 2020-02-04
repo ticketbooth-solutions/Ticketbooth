@@ -208,6 +208,7 @@ public class TicketContract : SmartContract
             if (SeatsAreEqual(tickets[i].Seat, seat))
             {
                 reserveIndex = i;
+                break;
             }
         }
 
@@ -281,6 +282,7 @@ public class TicketContract : SmartContract
             if (SeatsAreEqual(tickets[i].Seat, seat))
             {
                 releaseIndex = i;
+                break;
             }
         }
 
