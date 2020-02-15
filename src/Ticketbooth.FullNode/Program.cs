@@ -2,7 +2,6 @@
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.SmartContracts;
@@ -58,30 +57,10 @@ namespace Ticketbooth.FullNode
                 .UseSmartContractPoAConsensus()
                 .UseSmartContractPoAMining()
                 .UseSmartContractWallet()
+                .AddTicketboothApi()
+                /** must wait for API changes to be merged (stratisproject/StratisBitcoinFullNode/pull/4126)
                 .UseApi()
-                //.UseDiagnosticFeature()
-                .AddTicketboothApi();
-
-            //if (nodeSettings.EnableSignalR)
-            //{
-            //    nodeBuilder.AddSignalR(options =>
-            //    {
-            //        options.EventsToHandle = new[]
-            //        {
-            //            (IClientEvent) new BlockConnectedClientEvent(),
-            //            new TransactionReceivedClientEvent()
-            //        };
-
-            //        options.ClientEventBroadcasters = new[]
-            //        {
-            //            (Broadcaster: typeof(WalletInfoBroadcaster),
-            //                ClientEventBroadcasterSettings: new ClientEventBroadcasterSettings
-            //                {
-            //                    BroadcastFrequencySeconds = 5
-            //                })
-            //        };
-            //    });
-            //}
+                **/;
 
             return nodeBuilder.Build();
         }

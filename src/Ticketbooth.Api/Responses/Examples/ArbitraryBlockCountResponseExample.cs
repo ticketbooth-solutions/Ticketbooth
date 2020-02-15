@@ -1,8 +1,8 @@
 ﻿using Swashbuckle.AspNetCore.Examples;
 
-namespace Ticketbooth.Api.Requests.Examples
+namespace Ticketbooth.Api.Responses.Examples
 {
-    public class ArbitraryBlockCountExample : IExamplesProvider
+    public class ArbitraryBlockCountResponseExample : IExamplesProvider
     {
         public object GetExamples()
         {
