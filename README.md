@@ -2,18 +2,28 @@
 
 ## Overview
 
-Smart contract event ticketing, built on Stratis platform. Ticketbooth is a robust foundation for event ticketing applications.
-
-Ticketbooth can be integrated with payment gateways, ticket sales platforms and social platforms.
+Smart contract event ticketing, built on Stratis platform. Ticketbooth is a robust foundation for event ticketing applications. Ticketbooth can be integrated with payment gateways, ticket sales platforms and social platforms.
 
 ## Projects
 
+### Ticketbooth.Api
+
+![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Api?branchName=master)
+
+An extension to the Stratis full node that provides an API for interacting with Ticketbooth.
+
 ### Ticketbooth.Contract
 
-[![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Contract?branchName=master)](https://dev.azure.com/developmomentum/Ticketbooth/_build/latest?definitionId=8&branchName=master) 
+![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Contract?branchName=master) 
 [![Nuget](https://img.shields.io/nuget/v/Ticketbooth)](https://www.nuget.org/packages/Ticketbooth/)
 
 This project contains the smart contract(s) that Ticketbooth is based on.
+
+### Ticketbooth.FullNode
+
+![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Full%20Node?branchName=master)
+
+A Stratis full node on the Cirrus network, with the Ticketbooth API extension enabled.
 
 ## Documentation
  
