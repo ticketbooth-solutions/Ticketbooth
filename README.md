@@ -9,6 +9,7 @@ Smart contract event ticketing, built on Stratis platform. Ticketbooth is a robu
 ### Ticketbooth.Api
 
 ![Build Status](https://dev.azure.com/developmomentum/Ticketbooth/_apis/build/status/Api?branchName=master)
+[![Nuget](https://img.shields.io/nuget/v/Ticketbooth.Api)](https://www.nuget.org/packages/Ticketbooth.Api/)
 
 An extension to the Stratis full node that provides an API for interacting with Ticketbooth.
 
