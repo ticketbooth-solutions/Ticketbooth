@@ -6,7 +6,7 @@ namespace Ticketbooth.Api.Responses.Examples
     {
         public object GetExamples()
         {
-            return "dddceacac7b11409e024013aa688c60dae40b3a2281e4fbf169bb0b454241d55";
+            return "c80b5075fcd6d0d58e235b86556834d7dc71be48e8ee5940071431963b9f47d6";
         }
     }
 }

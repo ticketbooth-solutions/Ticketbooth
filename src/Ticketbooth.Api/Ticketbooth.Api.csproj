@@ -14,7 +14,7 @@
     <RepositoryUrl>https://github.com/drmathias/Ticketbooth</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>blockchain stratis ticketing smart-contracts ticketbooth</PackageTags>
-    <Version>1.0.0-rc1</Version>
+    <Version>1.0.0-rc2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +28,7 @@
     <PackageReference Include="SmartContract.Essentials" Version="1.0.2" />
     <PackageReference Include="Stratis.Bitcoin" Version="3.0.5" />
     <PackageReference Include="Stratis.Bitcoin.Features.SmartContracts" Version="1.0.2" />
+    <PackageReference Include="Stratis.Sidechains.Networks" Version="1.0.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Examples" Version="2.9.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="2.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="2.5.0" />

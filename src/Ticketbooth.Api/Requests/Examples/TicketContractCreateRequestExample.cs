@@ -5,6 +5,13 @@ namespace Ticketbooth.Api.Requests.Examples
 {
     public class TicketContractCreateRequestExample : IExamplesProvider
     {
+        private readonly ExampleGenerator _exampleGenerator;
+
+        public TicketContractCreateRequestExample(ExampleGenerator exampleGenerator)
+        {
+            _exampleGenerator = exampleGenerator;
+        }
+
         public object GetExamples()
         {
             return new TicketContractCreateRequest
@@ -55,8 +62,8 @@ namespace Ticketbooth.Api.Requests.Examples
                         Letter = 'B'
                     },
                 },
-                Sender = "CUtNvY1Jxpn4V4RD1tgphsUKpQdo4q5i54",
-                Venue = "Wirral Theatre",
+                Sender = _exampleGenerator.ValidAddress(),
+                Venue = "Manchester Arena",
                 WalletName = "Wallet One"
             };
         }

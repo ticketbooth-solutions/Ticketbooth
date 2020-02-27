@@ -4,6 +4,13 @@ namespace Ticketbooth.Api.Requests.Examples
 {
     public class EndSaleRequestExample : IExamplesProvider
     {
+        private readonly ExampleGenerator _exampleGenerator;
+
+        public EndSaleRequestExample(ExampleGenerator exampleGenerator)
+        {
+            _exampleGenerator = exampleGenerator;
+        }
+
         public object GetExamples()
         {
             return new EndSaleRequest
@@ -11,7 +18,7 @@ namespace Ticketbooth.Api.Requests.Examples
                 AccountName = "account 0",
                 GasPrice = 100,
                 Password = "Hunter2",
-                Sender = "CUtNvY1Jxpn4V4RD1tgphsUKpQdo4q5i54",
+                Sender = _exampleGenerator.ValidAddress(),
                 WalletName = "Wallet One"
             };
         }

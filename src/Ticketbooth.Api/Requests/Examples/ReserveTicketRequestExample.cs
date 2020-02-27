@@ -5,6 +5,13 @@ namespace Ticketbooth.Api.Requests.Examples
 {
     public class ReserveTicketRequestExample : IExamplesProvider
     {
+        private readonly ExampleGenerator _exampleGenerator;
+
+        public ReserveTicketRequestExample(ExampleGenerator exampleGenerator)
+        {
+            _exampleGenerator = exampleGenerator;
+        }
+
         public object GetExamples()
         {
             return new ReserveTicketRequest
@@ -18,7 +25,7 @@ namespace Ticketbooth.Api.Requests.Examples
                     Number = 3,
                     Letter = 'D'
                 },
-                Sender = "CUtNvY1Jxpn4V4RD1tgphsUKpQdo4q5i54",
+                Sender = _exampleGenerator.ValidAddress(),
                 WalletName = "Wallet One"
             };
         }

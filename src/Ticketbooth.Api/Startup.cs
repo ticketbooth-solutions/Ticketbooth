@@ -8,6 +8,8 @@ using SmartContract.Essentials.Ciphering;
 using SmartContract.Essentials.Randomness;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Ticketbooth.Api.Converters;
+using Ticketbooth.Api.Requests.Examples;
+using Ticketbooth.Api.Responses.Examples;
 
 namespace Ticketbooth.Api
 {
@@ -15,7 +17,6 @@ namespace Ticketbooth.Api
     {
         public void ConfigureServices(IServiceCollection services)
         {
-
             // web server
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
@@ -52,6 +53,8 @@ namespace Ticketbooth.Api
             services.AddTransient<IConfigureOptions<MvcJsonOptions>, TicketboothJsonOptions>();
 
             // swagger
+            services.AddSingleton<ExampleGenerator>();
+            services.AddSwaggerExamples();
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddSwaggerGen();
         }
@@ -72,6 +75,30 @@ namespace Ticketbooth.Api
             });
 
             app.UseMvc();
+        }
+    }
+
+    public static class ServiceExtensions
+    {
+        public static IServiceCollection AddSwaggerExamples(this IServiceCollection services)
+        {
+            // requests
+            services.AddTransient<BeginSaleRequestExample>();
+            services.AddTransient<EndSaleRequestExample>();
+            services.AddTransient<ReleaseTicketRequestExample>();
+            services.AddTransient<ReserveTicketRequestExample>();
+            services.AddTransient<SetIdentityVerificationPolicyRequestExample>();
+            services.AddTransient<SetNoReleaseBlocksRequestExample>();
+            services.AddTransient<SetTicketReleaseFeeRequestExample>();
+            services.AddTransient<TicketContractCreateRequestExample>();
+
+            // responses
+            services.AddTransient<ArbitraryBlockCountResponseExample>();
+            services.AddTransient<PriceResponseExample>();
+            services.AddTransient<TicketReservationDetailsResponseExample>();
+            services.AddTransient<TicketsResponseExample>();
+            services.AddTransient<TransactionHashResponseExample>();
+            return services;
         }
     }
 }

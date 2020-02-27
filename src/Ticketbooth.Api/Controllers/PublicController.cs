@@ -5,6 +5,7 @@ using NBitcoin;
 using SmartContract.Essentials.Ciphering;
 using SmartContract.Essentials.Randomness;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Wallet;
@@ -21,6 +22,7 @@ using Ticketbooth.Api.Requests;
 using Ticketbooth.Api.Requests.Examples;
 using Ticketbooth.Api.Responses;
 using Ticketbooth.Api.Responses.Examples;
+using Ticketbooth.Api.Tools;
 using Ticketbooth.Api.Validation;
 using static TicketContract;
 
@@ -36,6 +38,7 @@ namespace Ticketbooth.Api.Controllers
         private readonly IBroadcasterManager _broadcasterManager;
         private readonly ICipherFactory _cipherFactory;
         private readonly IConnectionManager _connectionManager;
+        private readonly IConsensusManager _consensusManager;
         private readonly ILogger<PublicController> _logger;
         private readonly ISerializer _serializer;
         private readonly ISmartContractTransactionService _smartContractTransactionService;
@@ -47,6 +50,7 @@ namespace Ticketbooth.Api.Controllers
             IBroadcasterManager broadcasterManager,
             ICipherFactory cipherFactory,
             IConnectionManager connectionManager,
+            IConsensusManager consensusManager,
             ILogger<PublicController> logger,
             ISerializer serializer,
             ISmartContractTransactionService smartContractTransactionService,
@@ -57,6 +61,7 @@ namespace Ticketbooth.Api.Controllers
             _broadcasterManager = broadcasterManager;
             _cipherFactory = cipherFactory;
             _connectionManager = connectionManager;
+            _consensusManager = consensusManager;
             _logger = logger;
             _serializer = serializer;
             _smartContractTransactionService = smartContractTransactionService;
@@ -214,12 +219,12 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="404">Contract does not exist</response>
-        /// <response code="409">Unable to broadcast transaction</response>
+        /// <response code="409">Sale is not currently open</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("{address}/ReserveTicket")]
         [SwaggerRequestExample(typeof(ReserveTicketRequest), typeof(ReserveTicketRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TicketReservationDetailsResponseExample))]
-        [ProducesResponseType(typeof(TicketReservationDetails), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(TicketReservationDetailsResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -238,6 +243,24 @@ namespace Ticketbooth.Api.Controllers
             if (!_stateRepositoryRoot.IsExist(numericAddress))
             {
                 return StatusCode(StatusCodes.Status404NotFound, $"No smart contract found at address {address}");
+            }
+
+            // check for state of ticket
+            var ticket = FindTicket(numericAddress, reserveTicketRequest.Seat);
+            if (ticket.Equals(default(Ticket)))
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, $"Invalid seat {reserveTicketRequest.Seat.ToDisplayString()}");
+            }
+
+            // check contract state
+            if (!HasOpenSale(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Sale is not currently open");
+            }
+
+            if (ticket.Address != Address.Zero)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, $"Ticket for seat {reserveTicketRequest.Seat.ToDisplayString()} not available to purchase");
             }
 
             var requiresIdentityVerification = RetrieveIdentityVerificationPolicy(numericAddress);
@@ -277,13 +300,6 @@ namespace Ticketbooth.Api.Controllers
                 customerNameParameter = $"{Serialization.TypeIdentifiers[typeof(byte[])]}#{Serialization.ByteArrayToHex(customerNameCipherResult.Cipher)}";
             }
 
-            var tickets = RetrieveTickets(numericAddress);
-            var requestedTicket = tickets.FirstOrDefault(ticket => ticket.Seat.Equals(reserveTicketRequest.Seat));
-            if (requestedTicket.Equals(default(Ticket)))
-            {
-                return StatusCode(StatusCodes.Status400BadRequest, $"Invalid seat {reserveTicketRequest.Seat.Number}{reserveTicketRequest.Seat.Letter}");
-            }
-
             // build transaction
             var parameterList = new List<string> { seatParameter, secretParameter };
             if (customerNameParameter != null)
@@ -294,7 +310,7 @@ namespace Ticketbooth.Api.Controllers
             var callTxResponse = _smartContractTransactionService.BuildCallTx(new BuildCallContractTransactionRequest
             {
                 AccountName = reserveTicketRequest.AccountName,
-                Amount = StratoshisToStrats(requestedTicket.Price),
+                Amount = StratoshisToStrats(ticket.Price),
                 ContractAddress = address,
                 FeeAmount = "0",
                 GasLimit = SmartContractFormatLogic.GasLimitMaximum,
@@ -320,17 +336,31 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
+            var cbcSecretValues = new CbcSecret
+            {
+                Plaintext = secret,
+                Key = secretCipherResult.Key,
+                IV = secretCipherResult.IV
+            };
+            var cbcCustomerValues = requiresIdentityVerification
+                ? new CbcValues
+                {
+                    Key = customerNameCipherResult.Key,
+                    IV = customerNameCipherResult.IV
+                }
+                : null;
+
             return Created(
                 $"/api/smartContracts/receipt?txHash={transactionHash}",
-                new TicketReservationDetails
+                new TicketReservationDetailsResponse
                 {
                     TransactionHash = transactionHash,
-                    Secret = secretCipherResult,
-                    CustomerName = customerNameCipherResult
+                    Secret = cbcSecretValues,
+                    CustomerName = cbcCustomerValues
                 });
         }
 
@@ -344,7 +374,7 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="404">Contract does not exist</response>
-        /// <response code="409">Unable to broadcast transaction</response>
+        /// <response code="409">Ticket release is not available</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("{address}/ReleaseTicket")]
         [SwaggerRequestExample(typeof(ReleaseTicketRequest), typeof(ReleaseTicketRequestExample))]
@@ -368,6 +398,30 @@ namespace Ticketbooth.Api.Controllers
             if (!_stateRepositoryRoot.IsExist(numericAddress))
             {
                 return StatusCode(StatusCodes.Status404NotFound, $"No smart contract found at address {address}");
+            }
+
+            // check for state of ticket
+            var ticket = FindTicket(numericAddress, releaseTicketRequest.Seat);
+            if (ticket.Equals(default(Ticket)))
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, $"Invalid seat {releaseTicketRequest.Seat.ToDisplayString()}");
+            }
+
+            // check state of contract
+            if (!HasOpenSale(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Sale is not currently open");
+            }
+
+            if (!IsRefundAvailable(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Ticket release is no longer available");
+            }
+
+            // verify ownership
+            if (ticket.Address == Address.Zero || ticket.Address != releaseTicketRequest.Sender.ToAddress(_network))
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, $"Ticket for seat {releaseTicketRequest.Seat.ToDisplayString()} not owned by {releaseTicketRequest.Sender}");
             }
 
             // check connections
@@ -410,7 +464,7 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
@@ -433,6 +487,38 @@ namespace Ticketbooth.Api.Controllers
         {
             var serializedValue = _stateRepositoryRoot.GetStorageValue(contractAddress, _serializer.Serialize(nameof(TicketContract.Tickets)));
             return _serializer.ToArray<Ticket>(serializedValue);
+        }
+
+        private Ticket FindTicket(uint160 contractAddress, Seat seat)
+        {
+            var tickets = RetrieveTickets(contractAddress);
+            return tickets.FirstOrDefault(ticket => ticket.Seat.Equals(seat));
+        }
+
+        private bool HasOpenSale(uint160 contractAddress)
+        {
+            var endOfSale = FetchEndOfSale(contractAddress);
+            return endOfSale != default && (ulong)_consensusManager.Tip.Height < endOfSale;
+        }
+
+        private ulong FetchEndOfSale(uint160 contractAddress)
+        {
+            var serializedValue = _stateRepositoryRoot.GetStorageValue(contractAddress, _serializer.Serialize("EndOfSale"));
+            return _serializer.ToUInt64(serializedValue);
+        }
+
+        private ulong FetchNoRefundBlockCount(uint160 contractAddress)
+        {
+            var serializedValue = _stateRepositoryRoot.GetStorageValue(contractAddress, _serializer.Serialize("NoRefundBlockCount"));
+            return _serializer.ToUInt64(serializedValue);
+        }
+
+        private bool IsRefundAvailable(uint160 contractAddress)
+        {
+            var endOfSale = FetchEndOfSale(contractAddress);
+            var noRefundBlockCount = FetchNoRefundBlockCount(contractAddress);
+            var endOfRefunds = endOfSale - noRefundBlockCount;
+            return endOfSale != default && (ulong)_consensusManager.Tip.Height < endOfRefunds;
         }
     }
 }

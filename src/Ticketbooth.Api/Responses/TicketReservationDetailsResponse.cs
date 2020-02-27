@@ -1,11 +1,9 @@
-﻿using SmartContract.Essentials.Ciphering;
-
-namespace Ticketbooth.Api.Responses
+﻿namespace Ticketbooth.Api.Responses
 {
     /// <summary>
     /// Ticket reservation details which are returned after a ticket is purchased
     /// </summary>
-    public class TicketReservationDetails
+    public class TicketReservationDetailsResponse
     {
         /// <summary>
         /// The smart contract transaction hash
@@ -13,13 +11,13 @@ namespace Ticketbooth.Api.Responses
         public string TransactionHash { get; set; }
 
         /// <summary>
-        /// The encryption result for the secret
+        /// The encryption values for the secret
         /// </summary>
-        public CbcResult Secret { get; set; }
+        public CbcSecret Secret { get; set; }
 
         /// <summary>
-        /// The encryption result for the customer identifier, if applicable
+        /// The encryption values for the customer identifier, if applicable
         /// </summary>
-        public CbcResult CustomerName { get; set; }
+        public CbcValues CustomerName { get; set; }
     }
 }

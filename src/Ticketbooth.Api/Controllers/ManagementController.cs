@@ -5,6 +5,7 @@ using NBitcoin;
 using SmartContract.Essentials.Ciphering;
 using SmartContract.Essentials.Randomness;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Wallet;
@@ -35,6 +36,7 @@ namespace Ticketbooth.Api.Controllers
         private readonly IBroadcasterManager _broadcasterManager;
         private readonly ICipherFactory _cipherFactory;
         private readonly IConnectionManager _connectionManager;
+        private readonly IConsensusManager _consensusManager;
         private readonly ILogger<ManagementController> _logger;
         private readonly ISerializer _serializer;
         private readonly ISmartContractTransactionService _smartContractTransactionService;
@@ -46,6 +48,7 @@ namespace Ticketbooth.Api.Controllers
             IBroadcasterManager broadcasterManager,
             ICipherFactory cipherFactory,
             IConnectionManager connectionManager,
+            IConsensusManager consensusManager,
             ILogger<ManagementController> logger,
             ISerializer serializer,
             ISmartContractTransactionService smartContractTransactionService,
@@ -56,6 +59,7 @@ namespace Ticketbooth.Api.Controllers
             _broadcasterManager = broadcasterManager;
             _cipherFactory = cipherFactory;
             _connectionManager = connectionManager;
+            _consensusManager = consensusManager;
             _logger = logger;
             _serializer = serializer;
             _smartContractTransactionService = smartContractTransactionService;
@@ -72,7 +76,6 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="201">Returns hash of the broadcast transaction</response>
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
-        /// <response code="409">Unable to broadcast transaction</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("")]
         [SwaggerRequestExample(typeof(TicketContractCreateRequest), typeof(TicketContractCreateRequestExample))]
@@ -80,7 +83,6 @@ namespace Ticketbooth.Api.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create(TicketContractCreateRequest ticketContractCreateRequest)
         {
@@ -124,7 +126,7 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
@@ -141,7 +143,7 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="404">Contract does not exist</response>
-        /// <response code="409">Unable to broadcast transaction</response>
+        /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("{address}/TicketReleaseFee")]
         [SwaggerRequestExample(typeof(SetTicketReleaseFeeRequest), typeof(SetTicketReleaseFeeRequestExample))]
@@ -165,6 +167,11 @@ namespace Ticketbooth.Api.Controllers
             if (!_stateRepositoryRoot.IsExist(numericAddress))
             {
                 return StatusCode(StatusCodes.Status404NotFound, $"No smart contract found at address {address}");
+            }
+
+            if (HasActiveSale(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Sale is currently active");
             }
 
             // check connections
@@ -206,7 +213,7 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
@@ -223,7 +230,7 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="404">Contract does not exist</response>
-        /// <response code="409">Unable to broadcast transaction</response>
+        /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("{address}/NoReleaseBlocks")]
         [SwaggerRequestExample(typeof(SetNoReleaseBlocksRequest), typeof(SetNoReleaseBlocksRequestExample))]
@@ -247,6 +254,11 @@ namespace Ticketbooth.Api.Controllers
             if (!_stateRepositoryRoot.IsExist(numericAddress))
             {
                 return StatusCode(StatusCodes.Status404NotFound, $"No smart contract found at address {address}");
+            }
+
+            if (HasActiveSale(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Sale is currently active");
             }
 
             // check connections
@@ -288,7 +300,7 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
@@ -305,7 +317,7 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="404">Contract does not exist</response>
-        /// <response code="409">Unable to broadcast transaction</response>
+        /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("{address}/IdentityVerificationPolicy")]
         [SwaggerRequestExample(typeof(SetIdentityVerificationPolicyRequest), typeof(SetIdentityVerificationPolicyRequestExample))]
@@ -329,6 +341,11 @@ namespace Ticketbooth.Api.Controllers
             if (!_stateRepositoryRoot.IsExist(numericAddress))
             {
                 return StatusCode(StatusCodes.Status404NotFound, $"No smart contract found at address {address}");
+            }
+
+            if (HasActiveSale(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Sale is currently active");
             }
 
             // check connections
@@ -370,7 +387,7 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
@@ -387,7 +404,7 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="404">Contract does not exist</response>
-        /// <response code="409">Unable to broadcast transaction</response>
+        /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("{address}/BeginSale")]
         [SwaggerRequestExample(typeof(BeginSaleRequest), typeof(BeginSaleRequestExample))]
@@ -406,11 +423,22 @@ namespace Ticketbooth.Api.Controllers
                 return StatusCode(StatusCodes.Status400BadRequest, $"Invalid address {address}");
             }
 
+            // check end of sale is in future
+            if (beginSaleRequest.Details.EndOfSale <= (ulong)_consensusManager.Tip.Height)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, $"End of sale must be in the future. Consensus height is at {_consensusManager.Tip.Height}");
+            }
+
             // check contract exists
             var numericAddress = address.ToUint160(_network);
             if (!_stateRepositoryRoot.IsExist(numericAddress))
             {
                 return StatusCode(StatusCodes.Status404NotFound, $"No smart contract found at address {address}");
+            }
+
+            if (HasActiveSale(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Sale is currently active");
             }
 
             // check connections
@@ -476,7 +504,7 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
@@ -493,7 +521,7 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="404">Contract does not exist</response>
-        /// <response code="409">Unable to broadcast transaction</response>
+        /// <response code="409">Sale is not currently active or has not ended</response>
         /// <response code="500">Unexpected error occured</response>
         [HttpPost("{address}/EndSale")]
         [SwaggerRequestExample(typeof(EndSaleRequest), typeof(EndSaleRequestExample))]
@@ -517,6 +545,11 @@ namespace Ticketbooth.Api.Controllers
             if (!_stateRepositoryRoot.IsExist(numericAddress))
             {
                 return StatusCode(StatusCodes.Status404NotFound, $"No smart contract found at address {address}");
+            }
+
+            if (!HasSaleEnded(numericAddress))
+            {
+                return StatusCode(StatusCodes.Status409Conflict, "Sale is not currently active or has not ended");
             }
 
             // check connections
@@ -556,11 +589,35 @@ namespace Ticketbooth.Api.Controllers
             if (transactionBroadCastEntry?.State == Stratis.Bitcoin.Features.Wallet.Broadcasting.State.CantBroadcast)
             {
                 _logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return StatusCode(StatusCodes.Status409Conflict, transactionBroadCastEntry.ErrorMessage);
+                return StatusCode(StatusCodes.Status500InternalServerError, transactionBroadCastEntry.ErrorMessage);
             }
 
             var transactionHash = transaction.GetHash().ToString();
             return Created($"/api/smartContracts/receipt?txHash={transactionHash}", transactionHash);
+        }
+
+        /// <summary>
+        /// Checks if a contract has an active sale
+        /// </summary>
+        private bool HasActiveSale(uint160 contractAddress)
+        {
+            var endOfSale = FetchEndOfSale(contractAddress);
+            return endOfSale != default;
+        }
+
+        /// <summary>
+        /// Checks if a contract has an active sale that is ended
+        /// </summary>
+        private bool HasSaleEnded(uint160 contractAddress)
+        {
+            var endOfSale = FetchEndOfSale(contractAddress);
+            return endOfSale != default && (ulong)_consensusManager.Tip.Height >= endOfSale;
+        }
+
+        private ulong FetchEndOfSale(uint160 contractAddress)
+        {
+            var serializedValue = _stateRepositoryRoot.GetStorageValue(contractAddress, _serializer.Serialize("EndOfSale"));
+            return _serializer.ToUInt64(serializedValue);
         }
     }
 }

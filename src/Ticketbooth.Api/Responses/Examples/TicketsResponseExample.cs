@@ -1,4 +1,6 @@
-﻿using Stratis.SmartContracts;
+﻿using NBitcoin;
+using Stratis.SmartContracts;
+using Stratis.SmartContracts.CLR;
 using Swashbuckle.AspNetCore.Examples;
 using static TicketContract;
 
@@ -6,6 +8,13 @@ namespace Ticketbooth.Api.Responses.Examples
 {
     public class TicketsResponseExample : IExamplesProvider
     {
+        private readonly Network _network;
+
+        public TicketsResponseExample(Network network)
+        {
+            _network = network;
+        }
+
         public object GetExamples()
         {
             return new Ticket[]
@@ -13,18 +22,18 @@ namespace Ticketbooth.Api.Responses.Examples
                 new Ticket
                 {
                     Address = Address.Zero,
-                    CustomerIdentifier = new byte[16] { 241, 28, 90, 2, 81, 83, 47, 121, 100, 29, 84, 83, 53, 215, 8, 99 },
+                    CustomerIdentifier = null,
                     Price = 230000000,
                     Seat = new Seat
                     {
                         Number = 1,
                         Letter = 'A'
                     },
-                    Secret = new byte[16] { 20, 82, 83, 110, 5, 8, 90, 37, 35, 194, 81, 7, 5, 38, 38, 183 }
+                    Secret = null
                 },
                 new Ticket
                 {
-                    Address = Address.Zero,
+                    Address = "tU9vpG8bfQxCQxGgHSjFYdb936jddYGrhm".ToAddress(_network),
                     CustomerIdentifier = new byte[16] { 101, 124, 84, 12, 32, 54, 45, 164, 60, 2, 45, 234, 243, 65, 4, 3 },
                     Price = 250000000,
                     Seat = new Seat
@@ -36,7 +45,7 @@ namespace Ticketbooth.Api.Responses.Examples
                 },
                 new Ticket
                 {
-                    Address = Address.Zero,
+                    Address = "tU9vpG8bfQxCQxGgHSjFYdb936jddYGrhm".ToAddress(_network),
                     CustomerIdentifier = new byte[16] { 93, 84, 2, 2, 72, 71, 84, 21, 128, 199, 2, 84, 228, 17, 72, 74 },
                     Price = 250000000,
                     Seat = new Seat
@@ -49,18 +58,18 @@ namespace Ticketbooth.Api.Responses.Examples
                 new Ticket
                 {
                     Address = Address.Zero,
-                    CustomerIdentifier = new byte[16] { 81, 83, 47, 121, 32, 12, 32, 221, 24, 29, 18, 200, 29, 93, 8, 2 },
+                    CustomerIdentifier = null,
                     Price = 230000000,
                     Seat = new Seat
                     {
                         Number = 4,
                         Letter = 'A'
                     },
-                    Secret = new byte[16] { 2, 128, 1, 28, 48, 82, 27, 84, 9, 82, 22, 42, 222, 43, 82, 74 }
+                    Secret = null
                 },
                 new Ticket
                 {
-                    Address = Address.Zero,
+                    Address = "tU9vpG8bfQxCQxGgHSjFYdb936jddYGrhm".ToAddress(_network),
                     CustomerIdentifier = new byte[16] { 98, 28, 71, 74, 128, 102, 227, 221, 28, 72, 64, 62, 18, 9, 1, 2 },
                     Price = 190000000,
                     Seat = new Seat
@@ -72,7 +81,7 @@ namespace Ticketbooth.Api.Responses.Examples
                 },
                 new Ticket
                 {
-                    Address = Address.Zero,
+                    Address = "tU9vpG8bfQxCQxGgHSjFYdb936jddYGrhm".ToAddress(_network),
                     CustomerIdentifier = new byte[16] { 99, 82, 47, 73, 72, 11, 38, 32, 111, 8, 129, 118, 82, 74, 71, 8},
                     Price = 270000000,
                     Seat = new Seat
@@ -84,7 +93,7 @@ namespace Ticketbooth.Api.Responses.Examples
                 },
                 new Ticket
                 {
-                    Address = Address.Zero,
+                    Address = "tU9vpG8bfQxCQxGgHSjFYdb936jddYGrhm".ToAddress(_network),
                     CustomerIdentifier = new byte[16] { 143, 34, 111, 13, 22, 55, 34, 41, 111, 52, 89, 33, 58, 28, 119, 9 },
                     Price = 260000000,
                     Seat = new Seat
@@ -96,7 +105,7 @@ namespace Ticketbooth.Api.Responses.Examples
                 },
                 new Ticket
                 {
-                    Address = Address.Zero,
+                    Address = "tU9vpG8bfQxCQxGgHSjFYdb936jddYGrhm".ToAddress(_network),
                     CustomerIdentifier = new byte[16] { 81, 83, 47, 121, 32, 12, 32, 221, 24, 29, 18, 200, 29, 93, 8, 2 },
                     Price = 200000000,
                     Seat = new Seat

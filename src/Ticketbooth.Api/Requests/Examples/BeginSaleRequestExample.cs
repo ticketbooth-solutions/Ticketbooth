@@ -5,6 +5,13 @@ namespace Ticketbooth.Api.Requests.Examples
 {
     public class BeginSaleRequestExample : IExamplesProvider
     {
+        private readonly ExampleGenerator _exampleGenerator;
+
+        public BeginSaleRequestExample(ExampleGenerator exampleGenerator)
+        {
+            _exampleGenerator = exampleGenerator;
+        }
+
         public object GetExamples()
         {
             return new BeginSaleRequest
@@ -94,7 +101,7 @@ namespace Ticketbooth.Api.Requests.Examples
                         Price = 32000000
                     }
                 },
-                Sender = "CUtNvY1Jxpn4V4RD1tgphsUKpQdo4q5i54",
+                Sender = _exampleGenerator.ValidAddress(),
                 WalletName = "Wallet One",
             };
         }
