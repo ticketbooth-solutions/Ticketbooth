@@ -159,22 +159,6 @@ public class TicketContract : SmartContract
     }
 
     /// <summary>
-    /// Checks the availability of a seat
-    /// </summary>
-    /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
-    /// <returns>Whether the seat is available</returns>
-    public bool CheckAvailability(byte[] seatIdentifierBytes)
-    {
-        Assert(SaleOpen, "Sale not open");
-
-        var ticket = SelectTicket(seatIdentifierBytes);
-
-        Assert(!IsDefaultSeat(ticket.Seat), "Seat not found");
-
-        return IsAvailable(ticket);
-    }
-
-    /// <summary>
     /// Reserves a ticket for the callers address
     /// </summary>
     /// <param name="seatIdentifierBytes">The serialized seat identifier</param>
@@ -300,20 +284,6 @@ public class TicketContract : SmartContract
         Tickets = tickets;
 
         Log(tickets[releaseIndex]);
-    }
-
-    private Ticket SelectTicket(byte[] seatIdentifierBytes)
-    {
-        var seat = Serializer.ToStruct<Seat>(seatIdentifierBytes);
-        foreach (var ticket in Tickets)
-        {
-            if (SeatsAreEqual(ticket.Seat, seat))
-            {
-                return ticket;
-            }
-        }
-
-        return default(Ticket);
     }
 
     private bool IsAvailable(Ticket ticket)
