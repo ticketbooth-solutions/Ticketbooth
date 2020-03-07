@@ -22,6 +22,9 @@ namespace Ticketbooth.Api
         /// <inheritdoc />
         public void Configure(SwaggerGenOptions options)
         {
+            // orders paths alphabetically
+            options.DocumentFilter<AlphabeticOrderFilter>();
+
             // enables request/response examples
             options.OperationFilter<ExamplesOperationFilter>();
 
