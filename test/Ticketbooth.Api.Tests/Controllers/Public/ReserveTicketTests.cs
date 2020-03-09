@@ -81,7 +81,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             var requestBody = ReserveTicketRequestWithCustomerName;
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -98,7 +98,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetupContractDoesNotExist(address);
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -116,7 +116,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetTicketsTo(TicketsWithoutRequestedReserveTicket);
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -135,7 +135,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetEndOfSaleToBlock(default);
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -155,7 +155,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetEndOfSaleToBlock(800_000);
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -175,7 +175,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetEndOfSaleToBlock(800_000);
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -196,7 +196,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetIdentityVerificationPolicyTo(true);
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -218,7 +218,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetupZeroConnections();
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -242,7 +242,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetupFailedBuildCallContractTransactionRequest();
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.IsAny<Transaction>()), Times.Never);
@@ -266,7 +266,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             var buildCallTransactionResponse = SetupSuccessfulBuildCallContractTransactionRequest();
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             _broadcasterManager.Verify(callTo => callTo.BroadcastTransactionAsync(It.Is<Transaction>(transaction => transaction.ToHex() == buildCallTransactionResponse.Hex)), Times.Once);
@@ -290,7 +290,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetupCannotBroadcastTransaction();
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
@@ -314,7 +314,7 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetupTransactionWasBroadcast();
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status201Created));
@@ -338,13 +338,13 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetupTransactionWasBroadcast();
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(((TicketReservationDetailsResponse)result.Value).Secret, Is.Not.Null);
-                Assert.That(((TicketReservationDetailsResponse)result.Value).CustomerName, Is.Not.Null);
+                Assert.That(((HashedSecretTicketReservationResponse)result.Value).Secret, Is.Not.Null);
+                Assert.That(((HashedSecretTicketReservationResponse)result.Value).CustomerName, Is.Not.Null);
             });
         }
 
@@ -366,13 +366,13 @@ namespace Ticketbooth.Api.Tests.Controllers
             SetupTransactionWasBroadcast();
 
             // Act
-            var result = await _publicController.ReserveTicket(address, requestBody) as ObjectResult;
+            var result = await _publicController.ReserveTicketHashSecret(address, requestBody) as ObjectResult;
 
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(((TicketReservationDetailsResponse)result.Value).Secret, Is.Not.Null);
-                Assert.That(((TicketReservationDetailsResponse)result.Value).CustomerName, Is.Null);
+                Assert.That(((HashedSecretTicketReservationResponse)result.Value).Secret, Is.Not.Null);
+                Assert.That(((HashedSecretTicketReservationResponse)result.Value).CustomerName, Is.Null);
             });
         }
     }

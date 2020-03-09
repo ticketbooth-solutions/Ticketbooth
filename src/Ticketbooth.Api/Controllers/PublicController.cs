@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using SHA3.Net;
 using SmartContract.Essentials.Ciphering;
+using SmartContract.Essentials.Hashing;
 using SmartContract.Essentials.Randomness;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
@@ -35,7 +37,7 @@ namespace Ticketbooth.Api.Controllers
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
     [Route("api/v{version:apiVersion}/ticketbooth")]
-    public partial class PublicController : Controller
+    public class PublicController : Controller
     {
         private readonly IBroadcasterManager _broadcasterManager;
         private readonly ICipherFactory _cipherFactory;
@@ -82,7 +84,6 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
         [ApiVersion("1.0")]
-        [ApiVersion("1.1")]
         [HttpGet("{address}/Tickets")]
         [SwaggerResponseExample(StatusCodes.Status200OK, typeof(TicketsResponseExample))]
         [ProducesResponseType(typeof(Ticket[]), StatusCodes.Status200OK)]
@@ -119,7 +120,6 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
         [ApiVersion("1.0")]
-        [ApiVersion("1.1")]
         [HttpGet("{address}/TicketReleaseFee")]
         [SwaggerResponseExample(StatusCodes.Status200OK, typeof(PriceResponseExample))]
         [ProducesResponseType(typeof(ulong), StatusCodes.Status200OK)]
@@ -156,7 +156,6 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
         [ApiVersion("1.0")]
-        [ApiVersion("1.1")]
         [HttpGet("{address}/NoReleaseBlocks")]
         [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ArbitraryBlockCountResponseExample))]
         [ProducesResponseType(typeof(ulong), StatusCodes.Status200OK)]
@@ -194,7 +193,6 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
         [ApiVersion("1.0")]
-        [ApiVersion("1.1")]
         [HttpGet("{address}/IdentityVerificationPolicy")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -234,14 +232,14 @@ namespace Ticketbooth.Api.Controllers
         [ApiVersion("1.0")]
         [HttpPost("{address}/ReserveTicket")]
         [SwaggerRequestExample(typeof(ReserveTicketRequest), typeof(ReserveTicketRequestExample))]
-        [SwaggerResponseExample(StatusCodes.Status201Created, typeof(CipheredSecretTicketReservationResponseExample))]
-        [ProducesResponseType(typeof(CipheredSecretTicketReservationResponse), StatusCodes.Status201Created)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, typeof(HashedSecretTicketReservationResponseExample))]
+        [ProducesResponseType(typeof(HashedSecretTicketReservationResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ReserveTicketCipherSecret(string address, ReserveTicketRequest reserveTicketRequest)
+        public async Task<IActionResult> ReserveTicketHashSecret(string address, ReserveTicketRequest reserveTicketRequest)
         {
             // validate address
             if (!AddressParser.IsValidAddress(address, _network))
@@ -291,13 +289,13 @@ namespace Ticketbooth.Api.Controllers
             var seatParameter = $"{Serialization.TypeIdentifiers[typeof(byte[])]}#{Serialization.ByteArrayToHex(seatBytes)}";
 
             var secret = _stringGenerator.CreateUniqueString(15);
-            CbcResult secretCipherResult;
-            using (var cipherProvider = _cipherFactory.CreateCbcProvider())
+            byte[] hashedSecret;
+            using (var hasher = Sha3.Sha3224())
             {
-                secretCipherResult = cipherProvider.Encrypt(secret);
+                hashedSecret = hasher.ComputeHash(secret);
             }
 
-            var secretParameter = $"{Serialization.TypeIdentifiers[typeof(byte[])]}#{Serialization.ByteArrayToHex(secretCipherResult.Cipher)}";
+            var secretParameter = $"{Serialization.TypeIdentifiers[typeof(byte[])]}#{Serialization.ByteArrayToHex(hashedSecret)}";
 
             CbcResult customerNameCipherResult = null;
             string customerNameParameter = null;
@@ -351,12 +349,6 @@ namespace Ticketbooth.Api.Controllers
             }
 
             var transactionHash = transaction.GetHash().ToString();
-            var cbcSecretValues = new CbcSecret
-            {
-                Plaintext = secret,
-                Key = secretCipherResult.Key,
-                IV = secretCipherResult.IV
-            };
             var cbcCustomerValues = requiresIdentityVerification
                 ? new CbcValues
                 {
@@ -367,10 +359,10 @@ namespace Ticketbooth.Api.Controllers
 
             return Created(
                 $"/api/smartContracts/receipt?txHash={transactionHash}",
-                new CipheredSecretTicketReservationResponse
+                new HashedSecretTicketReservationResponse
                 {
                     TransactionHash = transactionHash,
-                    Secret = cbcSecretValues,
+                    Secret = secret,
                     CustomerName = cbcCustomerValues
                 });
         }
@@ -388,7 +380,6 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="409">Ticket release is not available</response>
         /// <response code="500">Unexpected error occured</response>
         [ApiVersion("1.0")]
-        [ApiVersion("1.1")]
         [HttpPost("{address}/ReleaseTicket")]
         [SwaggerRequestExample(typeof(ReleaseTicketRequest), typeof(ReleaseTicketRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]

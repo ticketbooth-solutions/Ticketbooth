@@ -94,7 +94,6 @@ namespace Ticketbooth.Api
 
             // responses
             services.AddTransient<ArbitraryBlockCountResponseExample>();
-            services.AddTransient<CipheredSecretTicketReservationResponseExample>();
             services.AddTransient<HashedSecretTicketReservationResponseExample>();
             services.AddTransient<PriceResponseExample>();
             services.AddTransient<TicketsResponseExample>();
