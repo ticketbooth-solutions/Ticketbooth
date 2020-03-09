@@ -3,7 +3,7 @@
     /// <summary>
     /// Ticket reservation details which are returned after a ticket is purchased
     /// </summary>
-    public class TicketReservationDetailsResponse
+    public class CipheredSecretTicketReservationResponse
     {
         /// <summary>
         /// The smart contract transaction hash

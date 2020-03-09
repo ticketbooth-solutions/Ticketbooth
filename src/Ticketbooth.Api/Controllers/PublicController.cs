@@ -28,12 +28,14 @@ using static TicketContract;
 
 namespace Ticketbooth.Api.Controllers
 {
+    /// <summary>
+    /// Public API controller for ticketbooth
+    /// </summary>
     [ApiController]
-    [ApiVersion("1.0")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
     [Route("api/v{version:apiVersion}/ticketbooth")]
-    public class PublicController : Controller
+    public partial class PublicController : Controller
     {
         private readonly IBroadcasterManager _broadcasterManager;
         private readonly ICipherFactory _cipherFactory;
@@ -79,6 +81,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpGet("{address}/Tickets")]
         [SwaggerResponseExample(StatusCodes.Status200OK, typeof(TicketsResponseExample))]
         [ProducesResponseType(typeof(Ticket[]), StatusCodes.Status200OK)]
@@ -114,6 +118,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpGet("{address}/TicketReleaseFee")]
         [SwaggerResponseExample(StatusCodes.Status200OK, typeof(PriceResponseExample))]
         [ProducesResponseType(typeof(ulong), StatusCodes.Status200OK)]
@@ -149,6 +155,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpGet("{address}/NoReleaseBlocks")]
         [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ArbitraryBlockCountResponseExample))]
         [ProducesResponseType(typeof(ulong), StatusCodes.Status200OK)]
@@ -185,6 +193,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="404">Contract does not exist</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpGet("{address}/IdentityVerificationPolicy")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -221,16 +231,17 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="409">Sale is not currently open</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
         [HttpPost("{address}/ReserveTicket")]
         [SwaggerRequestExample(typeof(ReserveTicketRequest), typeof(ReserveTicketRequestExample))]
-        [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TicketReservationDetailsResponseExample))]
-        [ProducesResponseType(typeof(TicketReservationDetailsResponse), StatusCodes.Status201Created)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, typeof(CipheredSecretTicketReservationResponseExample))]
+        [ProducesResponseType(typeof(CipheredSecretTicketReservationResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ReserveTicket(string address, ReserveTicketRequest reserveTicketRequest)
+        public async Task<IActionResult> ReserveTicketCipherSecret(string address, ReserveTicketRequest reserveTicketRequest)
         {
             // validate address
             if (!AddressParser.IsValidAddress(address, _network))
@@ -356,7 +367,7 @@ namespace Ticketbooth.Api.Controllers
 
             return Created(
                 $"/api/smartContracts/receipt?txHash={transactionHash}",
-                new TicketReservationDetailsResponse
+                new CipheredSecretTicketReservationResponse
                 {
                     TransactionHash = transactionHash,
                     Secret = cbcSecretValues,
@@ -376,6 +387,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="409">Ticket release is not available</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpPost("{address}/ReleaseTicket")]
         [SwaggerRequestExample(typeof(ReleaseTicketRequest), typeof(ReleaseTicketRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]

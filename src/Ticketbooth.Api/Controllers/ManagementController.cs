@@ -27,7 +27,6 @@ using static TicketContract;
 namespace Ticketbooth.Api.Controllers
 {
     [ApiController]
-    [ApiVersion("1.0")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
     [Route("api/v{version:apiVersion}/ticketbooth")]
@@ -77,6 +76,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="400">Invalid request</response>
         /// <response code="403">Node has no connections</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpPost("")]
         [SwaggerRequestExample(typeof(TicketContractCreateRequest), typeof(TicketContractCreateRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]
@@ -145,6 +146,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpPost("{address}/TicketReleaseFee")]
         [SwaggerRequestExample(typeof(SetTicketReleaseFeeRequest), typeof(SetTicketReleaseFeeRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]
@@ -232,6 +235,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpPost("{address}/NoReleaseBlocks")]
         [SwaggerRequestExample(typeof(SetNoReleaseBlocksRequest), typeof(SetNoReleaseBlocksRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]
@@ -319,6 +324,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpPost("{address}/IdentityVerificationPolicy")]
         [SwaggerRequestExample(typeof(SetIdentityVerificationPolicyRequest), typeof(SetIdentityVerificationPolicyRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]
@@ -406,6 +413,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="409">Sale is active</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpPost("{address}/BeginSale")]
         [SwaggerRequestExample(typeof(BeginSaleRequest), typeof(BeginSaleRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]
@@ -523,6 +532,8 @@ namespace Ticketbooth.Api.Controllers
         /// <response code="404">Contract does not exist</response>
         /// <response code="409">Sale is not currently active or has not ended</response>
         /// <response code="500">Unexpected error occured</response>
+        [ApiVersion("1.0")]
+        [ApiVersion("1.1")]
         [HttpPost("{address}/EndSale")]
         [SwaggerRequestExample(typeof(EndSaleRequest), typeof(EndSaleRequestExample))]
         [SwaggerResponseExample(StatusCodes.Status201Created, typeof(TransactionHashResponseExample))]
